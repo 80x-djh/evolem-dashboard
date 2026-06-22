@@ -1,0 +1,40 @@
+name: Refresh EVOLEM dashboard
+
+on:
+  schedule:
+    # Daily on weekdays. Off-peak minute (:17) — GitHub drops on-the-hour/half-hour
+    # scheduled jobs first under load, so avoid :00 and :30.
+    - cron: "17 6 * * 1-5"
+  workflow_dispatch: # manual trigger
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: pip install requests
+      - name: Regenerate encrypted dashboard from live Dealflow
+        env:
+          ATTIO_API_KEY: ${{ secrets.ATTIO_API_KEY }}
+          DASH_PASSWORD: ${{ secrets.DASH_PASSWORD }}
+        run: bash generator/build.sh
+      - name: Commit if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if ! git diff --quiet -- index.html; then
+            git add index.html
+            git commit -m "Refresh dashboard $(date -u +%Y-%m-%dT%H:%MZ) [auto]"
+            git push
+          else
+            echo "No change in index.html"
+          fi
