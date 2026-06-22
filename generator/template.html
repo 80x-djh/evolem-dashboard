@@ -1,0 +1,3491 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>EVOLEM Plateforme: Advanced Reports</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.4/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+:root {
+  --bg-0: #0a0c11;
+  --bg-1: #12151d;
+  --bg-2: #181c27;
+  --bg-3: #20253280;
+  --border: #232a3b;
+  --border-soft: #1d2231;
+  --text-0: #eef2f8;
+  --text-1: #a5adc0;
+  --text-2: #6b7387;
+  --text-3: #4a5068;
+  --accent: #6aa9ff;
+  --accent-soft: rgba(106, 169, 255, 0.14);
+  --accent-strong: #4a8eff;
+  --success: #58e1a6;
+  --success-soft: rgba(88, 225, 166, 0.14);
+  --warning: #ffb86b;
+  --warning-soft: rgba(255, 184, 107, 0.14);
+  --danger: #ff7e7e;
+  --danger-soft: rgba(255, 126, 126, 0.14);
+  --purple: #b48dff;
+  --cyan: #5fd3c8;
+  --gold: #f2c879;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.25);
+  --shadow-md: 0 8px 24px rgba(0,0,0,0.35);
+  --shadow-lg: 0 24px 60px rgba(0,0,0,0.45);
+  --dur-fast: 120ms;
+  --dur-med: 220ms;
+  --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, "Helvetica Neue", sans-serif;
+  --sidebar-w: 240px;
+  --sidebar-w-collapsed: 60px;
+}
+
+* { box-sizing: border-box; }
+html, body {
+  background: var(--bg-0);
+  overflow-x: hidden;
+  color: var(--text-0);
+  font-family: var(--font-stack);
+  margin: 0;
+  min-height: 100vh;
+}
+body { display: flex; }
+
+::selection { background: var(--accent-soft); color: var(--text-0); }
+button { font-family: inherit; }
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* ============ Sidebar ============ */
+aside.sidebar {
+  width: var(--sidebar-w);
+  flex: 0 0 var(--sidebar-w);
+  background: var(--bg-1);
+  border-right: 1px solid var(--border);
+  padding: 22px 14px 24px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  z-index: 60;
+}
+aside.sidebar .brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 6px 22px;
+  border-bottom: 1px solid var(--border-soft);
+  margin-bottom: 16px;
+}
+aside.sidebar .brand img {
+  width: 32px; height: 32px; border-radius: 8px;
+}
+aside.sidebar .brand .name { font-size: 13px; font-weight: 600; color: var(--text-0); line-height: 1.2; }
+aside.sidebar .brand .sub { font-size: 10px; color: var(--text-2); letter-spacing: 0.06em; text-transform: uppercase; }
+aside.sidebar .group-label {
+  font-size: 10px;
+  color: var(--text-2);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 14px 10px 6px;
+  font-weight: 600;
+}
+aside.sidebar .nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  color: var(--text-1);
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  width: 100%;
+  text-align: left;
+  transition: background var(--dur-fast), color var(--dur-fast);
+  position: relative;
+}
+aside.sidebar .nav-item:hover { background: var(--bg-2); color: var(--text-0); }
+aside.sidebar .nav-item.active {
+  background: var(--bg-2);
+  color: var(--text-0);
+  font-weight: 600;
+}
+aside.sidebar .nav-item.active::before {
+  content: ''; position: absolute; left: 0; top: 8px; bottom: 8px;
+  width: 3px; border-radius: 2px; background: var(--accent);
+}
+aside.sidebar .nav-item .icon { width: 14px; height: 14px; flex: 0 0 14px; opacity: 0.7; }
+aside.sidebar .nav-item.active .icon { opacity: 1; }
+aside.sidebar .footer {
+  margin-top: auto;
+  padding: 14px 10px 0;
+  border-top: 1px solid var(--border-soft);
+  font-size: 10px;
+  color: var(--text-2);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+aside.sidebar .footer strong { color: var(--text-0); }
+
+/* ============ Main content ============ */
+main {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+}
+.topbar {
+  position: sticky; top: 0; z-index: 50;
+  background: rgba(10, 12, 17, 0.88);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border-soft);
+  padding: 14px 28px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.topbar .title { font-size: 15px; font-weight: 600; color: var(--text-0); }
+.topbar .period-label { font-size: 12px; color: var(--text-1); }
+.topbar .pulse {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 11px; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.06em;
+}
+.topbar .pulse::before {
+  content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--success);
+  box-shadow: 0 0 0 0 rgba(88, 225, 166, 0.4);
+  animation: pulse 2s infinite;
+}
+@keyframes pulse {
+  0% { box-shadow: 0 0 0 0 rgba(88, 225, 166, 0.5); }
+  70% { box-shadow: 0 0 0 8px rgba(88, 225, 166, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(88, 225, 166, 0); }
+}
+.topbar .spacer { flex: 1; }
+.topbar .kbd-hint {
+  font-size: 11px;
+  color: var(--text-2);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.topbar .kbd {
+  display: inline-block;
+  padding: 2px 7px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg-2);
+  color: var(--text-1);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 10px;
+  line-height: 1.3;
+}
+
+/* Buttons */
+.btn {
+  background: var(--accent);
+  color: #08101f;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 8px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: filter var(--dur-fast), transform var(--dur-fast);
+  letter-spacing: 0.02em;
+}
+.btn:hover { filter: brightness(1.1); }
+.btn:active { transform: scale(0.97); }
+.btn.secondary {
+  background: var(--bg-2);
+  color: var(--text-0);
+  border: 1px solid var(--border);
+}
+.btn.ghost { background: transparent; color: var(--text-1); border: 1px solid var(--border); }
+.btn.tiny { padding: 5px 10px; font-size: 11px; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+
+/* ============ Filter bar ============ */
+.filterbar {
+  padding: 14px 28px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+  border-bottom: 1px solid var(--border-soft);
+  background: var(--bg-0);
+}
+.filterbar .chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 11px;
+  border-radius: 999px;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  color: var(--text-1);
+  font-size: 12px;
+  cursor: pointer;
+  transition: background var(--dur-fast), color var(--dur-fast);
+}
+.filterbar .chip:hover { background: var(--bg-3); color: var(--text-0); }
+.filterbar .chip.active {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.filterbar .chip .count {
+  background: var(--accent);
+  color: #08101f;
+  padding: 1px 6px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+}
+.filterbar .chip .close {
+  color: var(--text-2);
+  font-size: 14px;
+  margin-left: 2px;
+}
+.filterbar .chip .close:hover { color: var(--danger); }
+.filterbar .sep { width: 1px; height: 22px; background: var(--border); margin: 0 4px; }
+
+/* Filter dropdown menus */
+.dropdown {
+  position: relative;
+  display: inline-block;
+}
+.dropdown-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  min-width: 220px;
+  max-height: 320px;
+  overflow-y: auto;
+  box-shadow: var(--shadow-md);
+  padding: 6px;
+  display: none;
+  z-index: 100;
+}
+.dropdown.open .dropdown-menu { display: block; }
+.dropdown-menu .option {
+  display: flex; align-items: center; gap: 10px;
+  padding: 7px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  color: var(--text-1);
+  cursor: pointer;
+}
+.dropdown-menu .option:hover { background: var(--bg-3); color: var(--text-0); }
+.dropdown-menu .option input[type="checkbox"] { accent-color: var(--accent); margin: 0; }
+.dropdown-menu .option.active { color: var(--text-0); }
+.dropdown-menu .dd-date { display: flex; gap: 6px; padding: 8px; }
+.dropdown-menu .dd-date input { background: var(--bg-1); border: 1px solid var(--border); color: var(--text-0); padding: 6px 8px; border-radius: 4px; font-size: 12px; flex: 1; }
+.dropdown-menu .dd-section { font-size: 10px; text-transform: uppercase; color: var(--text-2); padding: 8px 10px 4px; letter-spacing: 0.08em; font-weight: 600; }
+
+/* ============ Content area ============ */
+.content { padding: 26px 28px 80px; }
+.tab-content { display: none; }
+.tab-content.active { display: block; animation: fadeIn 260ms ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ============ Panels, grids, KPIs ============ */
+.grid { display: grid; gap: 18px; }
+.grid-2 { grid-template-columns: 1fr 1fr; }
+.grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+.grid-4 { grid-template-columns: repeat(4, 1fr); }
+.grid-5 { grid-template-columns: repeat(5, 1fr); }
+.grid-3-2 { grid-template-columns: 2fr 1fr; }
+.grid-1-2 { grid-template-columns: 1fr 2fr; }
+
+.panel {
+  background: var(--bg-1);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-lg);
+  padding: 18px 20px;
+  transition: border-color var(--dur-med);
+}
+.panel:hover { border-color: var(--border); }
+.panel + .panel, .grid + .panel, .panel + .grid { margin-top: 18px; }
+.panel h2 {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin: 0 0 4px;
+  color: var(--text-2);
+  font-weight: 600;
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+}
+.panel h2 .badge {
+  font-size: 10px; padding: 2px 8px; border-radius: 999px;
+  background: var(--accent-soft); color: var(--accent); font-weight: 600;
+}
+.panel .desc { color: var(--text-2); font-size: 12px; margin: 0 0 14px; line-height: 1.5; }
+.panel .chart-wrap { position: relative; height: 260px; }
+.panel .chart-wrap.tall { height: 340px; }
+.panel .chart-wrap.short { height: 180px; }
+.section-head {
+  display: flex; align-items: baseline; justify-content: space-between;
+  margin: 8px 0 16px;
+}
+.section-head h1 {
+  font-size: 22px; font-weight: 600; margin: 0; color: var(--text-0);
+  letter-spacing: -0.01em;
+}
+.section-head .sub { color: var(--text-2); font-size: 13px; }
+
+/* KPI cards */
+.kpi {
+  background: var(--bg-1);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-lg);
+  padding: 16px 18px;
+  position: relative;
+  overflow: hidden;
+  transition: border-color var(--dur-med), transform var(--dur-med);
+}
+.kpi:hover { border-color: var(--border); }
+.kpi .label {
+  font-size: 11px; text-transform: uppercase; color: var(--text-2);
+  letter-spacing: 0.06em; font-weight: 600;
+}
+.kpi .value {
+  font-size: 30px; font-weight: 700; color: var(--text-0);
+  margin-top: 6px; line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+.kpi .sub { font-size: 11px; color: var(--text-2); margin-top: 4px; }
+.kpi .delta {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 11px; margin-top: 6px;
+  padding: 3px 8px; border-radius: 999px;
+  font-weight: 600;
+  background: var(--bg-2); color: var(--text-1);
+}
+.kpi .delta.up { background: var(--success-soft); color: var(--success); }
+.kpi .delta.down { background: var(--danger-soft); color: var(--danger); }
+.kpi .spark {
+  position: absolute;
+  right: 14px; bottom: 14px;
+  width: 80px; height: 28px;
+  opacity: 0.85;
+}
+.kpi .score-bar {
+  margin-top: 10px;
+  height: 6px;
+  background: var(--bg-2);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.kpi .score-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  background: var(--accent);
+  transition: width 600ms ease;
+}
+
+/* ============ Hero: morning brief ============ */
+.hero {
+  display: grid;
+  grid-template-columns: 2fr 3fr;
+  gap: 16px;
+  margin-bottom: 22px;
+}
+.hero .brief {
+  background: linear-gradient(135deg, var(--bg-1) 0%, #171c29 100%);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 22px 24px;
+  position: relative;
+}
+.hero .brief .head {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 14px;
+}
+.hero .brief .head h2 {
+  font-size: 13px; text-transform: uppercase; letter-spacing: 0.1em;
+  color: var(--text-0); margin: 0; font-weight: 600;
+}
+.hero .brief .head .when { font-size: 11px; color: var(--text-2); }
+.brief-insight {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--border-soft);
+  font-size: 13px; color: var(--text-1);
+  cursor: pointer;
+  transition: color var(--dur-fast);
+}
+.brief-insight:last-child { border-bottom: none; }
+.brief-insight:hover { color: var(--text-0); }
+.brief-insight .ico {
+  width: 18px; height: 18px; flex: 0 0 18px;
+  border-radius: 4px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 700;
+  margin-top: 1px;
+}
+.brief-insight .ico.up { background: var(--success-soft); color: var(--success); }
+.brief-insight .ico.down { background: var(--danger-soft); color: var(--danger); }
+.brief-insight .ico.warn { background: var(--warning-soft); color: var(--warning); }
+.brief-insight .ico.info { background: var(--accent-soft); color: var(--accent); }
+.brief-insight .text { flex: 1; line-height: 1.5; }
+.brief-insight .text strong { color: var(--text-0); }
+.hero .brief .empty { color: var(--text-2); font-size: 12px; padding: 14px 0; font-style: italic; }
+
+.hero .metrics {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+/* ============ Tables ============ */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+}
+th, td {
+  padding: 9px 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--border-soft);
+  vertical-align: middle;
+}
+th {
+  color: var(--text-2);
+  font-weight: 500;
+  text-transform: uppercase;
+  font-size: 10.5px;
+  letter-spacing: 0.07em;
+  cursor: pointer;
+  user-select: none;
+  background: var(--bg-1);
+  position: sticky; top: 0; z-index: 5;
+}
+th.num, td.num { text-align: right; font-variant-numeric: tabular-nums; }
+tr:last-child td { border-bottom: none; }
+tbody tr { transition: background var(--dur-fast); }
+tbody tr:hover td { background: var(--accent-soft); }
+tbody tr.clickable { cursor: pointer; }
+
+.pill {
+  display: inline-block;
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.pill.good { background: var(--success-soft); color: var(--success); }
+.pill.bad { background: var(--danger-soft); color: var(--danger); }
+.pill.warn { background: var(--warning-soft); color: var(--warning); }
+.pill.info { background: var(--accent-soft); color: var(--accent); }
+.pill.neutral { background: var(--bg-2); color: var(--text-2); }
+.pill.purple { background: rgba(180, 141, 255, 0.15); color: var(--purple); }
+
+.empty {
+  color: var(--text-2);
+  font-size: 13px;
+  text-align: center;
+  padding: 32px;
+  font-style: italic;
+}
+.empty svg { display: block; margin: 0 auto 12px; opacity: 0.3; }
+
+/* ============ Heatmap ============ */
+.heatmap {
+  display: grid;
+  gap: 2px;
+  font-size: 11px;
+}
+.heatmap .cell {
+  padding: 9px 6px;
+  text-align: center;
+  border-radius: 4px;
+  min-height: 34px;
+  display: flex; align-items: center; justify-content: center;
+  font-variant-numeric: tabular-nums;
+}
+.heatmap .header-row {
+  font-weight: 600;
+  color: var(--text-2);
+  text-transform: uppercase;
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  background: transparent;
+}
+.heatmap .row-label {
+  font-weight: 500;
+  color: var(--text-0);
+  text-align: left;
+  padding-left: 8px;
+  background: transparent;
+}
+
+/* ============ Bar rows (horizontal bar list) ============ */
+.bar-row {
+  display: flex; align-items: center; gap: 10px;
+  margin: 7px 0;
+  font-size: 12px;
+}
+.bar-row .label {
+  width: 150px;
+  color: var(--text-1);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.bar-row .bar-bg {
+  flex: 1; height: 8px;
+  background: var(--bg-2);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.bar-row .bar-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 999px;
+  transition: width 500ms ease;
+}
+.bar-row .val {
+  width: 50px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-0);
+  font-weight: 600;
+}
+
+/* ============ Search input ============ */
+.search-input {
+  width: 100%;
+  background: var(--bg-2);
+  color: var(--text-0);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  font-size: 13px;
+  margin-bottom: 14px;
+  transition: border-color var(--dur-fast);
+}
+.search-input:focus { border-color: var(--accent); outline: none; }
+.search-input::placeholder { color: var(--text-2); }
+
+/* ============ Scroll container ============ */
+.scroll { max-height: 480px; overflow-y: auto; border-radius: var(--radius-sm); }
+.scroll::-webkit-scrollbar { width: 10px; }
+.scroll::-webkit-scrollbar-thumb { background: var(--bg-2); border-radius: 5px; }
+.scroll::-webkit-scrollbar-thumb:hover { background: var(--bg-3); }
+
+/* ============ Command palette ============ */
+.palette-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(4px);
+  display: none;
+  z-index: 1000;
+  padding-top: 12vh;
+}
+.palette-overlay.open { display: flex; justify-content: center; align-items: flex-start; }
+.palette {
+  width: 560px;
+  max-width: calc(100vw - 40px);
+  background: var(--bg-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+  animation: pop 180ms ease;
+}
+@keyframes pop {
+  from { transform: translateY(-8px) scale(0.98); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+.palette-input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  padding: 18px 22px;
+  font-size: 15px;
+  color: var(--text-0);
+  outline: none;
+  border-bottom: 1px solid var(--border-soft);
+}
+.palette-list {
+  max-height: 420px;
+  overflow-y: auto;
+  padding: 6px 0;
+}
+.palette-group-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  color: var(--text-2);
+  padding: 10px 22px 4px;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+}
+.palette-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 9px 22px;
+  font-size: 13px;
+  color: var(--text-1);
+  cursor: pointer;
+  transition: background var(--dur-fast);
+}
+.palette-item:hover, .palette-item.focused { background: var(--accent-soft); color: var(--text-0); }
+.palette-item .kind {
+  font-size: 10px; text-transform: uppercase; color: var(--text-2);
+  margin-left: auto; letter-spacing: 0.05em;
+}
+.palette-item .icon {
+  width: 14px; height: 14px;
+  opacity: 0.7;
+}
+.palette-footer {
+  padding: 8px 22px;
+  border-top: 1px solid var(--border-soft);
+  display: flex; justify-content: space-between;
+  font-size: 10px; color: var(--text-2);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* ============ Drilldown drawer ============ */
+.drawer-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.4);
+  display: none;
+  z-index: 900;
+}
+.drawer-overlay.open { display: block; }
+.drawer {
+  position: fixed;
+  right: 0; top: 0; bottom: 0;
+  width: 480px;
+  max-width: 92vw;
+  background: var(--bg-1);
+  border-left: 1px solid var(--border);
+  box-shadow: var(--shadow-lg);
+  transform: translateX(100%);
+  transition: transform 280ms ease;
+  z-index: 920;
+  overflow-y: auto;
+  padding: 24px 26px 40px;
+}
+.drawer.open { transform: translateX(0); }
+.drawer .close {
+  position: absolute; top: 14px; right: 14px;
+  width: 28px; height: 28px;
+  border: none; background: var(--bg-2); color: var(--text-1);
+  border-radius: 6px; cursor: pointer;
+}
+.drawer h3 { margin: 0 0 6px; font-size: 20px; font-weight: 600; }
+.drawer .meta { color: var(--text-2); font-size: 12px; margin-bottom: 20px; }
+.drawer .field {
+  display: grid; grid-template-columns: 130px 1fr;
+  padding: 10px 0; border-bottom: 1px solid var(--border-soft);
+  font-size: 13px;
+}
+.drawer .field .k { color: var(--text-2); text-transform: uppercase; font-size: 10px; letter-spacing: 0.06em; }
+.drawer .field .v { color: var(--text-0); }
+
+/* ============ PDF progress modal ============ */
+.pdf-modal {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(4px);
+  display: none;
+  z-index: 1100;
+  align-items: center; justify-content: center;
+}
+.pdf-modal.open { display: flex; }
+.pdf-modal .box {
+  background: var(--bg-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 26px 30px;
+  width: 360px;
+  text-align: center;
+  box-shadow: var(--shadow-lg);
+}
+.pdf-modal .box h3 { margin: 0 0 6px; font-size: 16px; }
+.pdf-modal .box .sub { color: var(--text-2); font-size: 12px; margin-bottom: 18px; }
+.pdf-modal .box .progressbar {
+  height: 6px; background: var(--bg-2); border-radius: 999px; overflow: hidden;
+  margin-bottom: 10px;
+}
+.pdf-modal .box .progressbar .fill {
+  height: 100%; background: var(--accent); width: 0%;
+  transition: width 200ms ease;
+}
+.pdf-modal .box .status { font-size: 11px; color: var(--text-2); letter-spacing: 0.05em; text-transform: uppercase; }
+
+/* ============ Skeleton loader ============ */
+.skeleton {
+  background: linear-gradient(90deg, var(--bg-1) 0%, var(--bg-2) 50%, var(--bg-1) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.6s infinite;
+  border-radius: var(--radius-md);
+}
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ============ Print hide / print stage ============ */
+#print-stage {
+  position: absolute;
+  left: -10000px;
+  top: 0;
+  width: 1100px;
+  background: #ffffff;
+  color: #0b0d12;
+}
+
+/* ============ Responsive ============ */
+@media (max-width: 1200px) {
+  .hero { grid-template-columns: 1fr; }
+  .grid-4 { grid-template-columns: 1fr 1fr; }
+  .grid-3, .grid-3-2 { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 900px) {
+  :root { --sidebar-w: 60px; }
+  aside.sidebar { padding: 18px 6px; }
+  aside.sidebar .brand { justify-content: center; }
+  aside.sidebar .brand .text, aside.sidebar .group-label, aside.sidebar .nav-item .label, aside.sidebar .footer { display: none; }
+  aside.sidebar .nav-item { justify-content: center; }
+  .grid-2, .grid-3, .grid-4, .grid-5, .grid-3-2, .grid-1-2 { grid-template-columns: 1fr; }
+  .content { padding: 18px 16px 60px; }
+  .topbar, .filterbar { padding: 12px 16px; }
+}
+
+@media print {
+  body { background: white; color: black; display: block; }
+  aside.sidebar, .topbar, .filterbar, .btn, .palette-overlay, .pdf-modal, .drawer-overlay, .drawer { display: none !important; }
+  .panel, .kpi { background: white; border-color: #ccc; break-inside: avoid; page-break-inside: avoid; }
+  .tab-content { display: block !important; }
+}
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="brand">
+    <img src="assets/80x-logo.png" alt="80x" />
+    <div class="text">
+      <div class="name">EVOLEM Plateforme</div>
+      <div class="sub">Advanced Reports</div>
+    </div>
+  </div>
+
+  <div class="group-label">Report</div>
+  <button class="nav-item active" data-tab="overview"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg><span class="label">Overview</span></button>
+  <button class="nav-item" data-tab="insights"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 1 10 10"/><path d="M12 6v6l4 2"/></svg><span class="label">Insights &amp; Forecast</span></button>
+  <button class="nav-item" data-tab="quarterly"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg><span class="label">Quarterly</span></button>
+
+  <div class="group-label">Flow</div>
+  <button class="nav-item" data-tab="funnel"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/></svg><span class="label">Funnel &amp; Velocity</span></button>
+  <button class="nav-item" data-tab="loss"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M4.93 4.93l14.14 14.14"/></svg><span class="label">Loss Analysis</span></button>
+  <button class="nav-item" data-tab="watchlist"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4l3 2"/><circle cx="12" cy="12" r="10"/></svg><span class="label">Watchlist</span></button>
+
+  <div class="group-label">People</div>
+  <button class="nav-item" data-tab="team"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg><span class="label">Team</span></button>
+  <button class="nav-item" data-tab="sources"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg><span class="label">Sources</span></button>
+
+  <div class="group-label">Portfolio</div>
+  <button class="nav-item" data-tab="sectors"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M18 17V9M13 17V5M8 17v-3"/></svg><span class="label">Sectors &amp; Poles</span></button>
+  <button class="nav-item" data-tab="alldeals"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 3v18"/></svg><span class="label">All Deals</span></button>
+
+  <div class="footer">Built by <strong>80x</strong><br/>for EVOLEM Plateforme</div>
+</aside>
+
+<main>
+  <div class="topbar">
+    <div>
+      <div class="title" id="topbar-title">Overview</div>
+      <div class="period-label"><span class="pulse">Fresh</span> &nbsp;&middot;&nbsp; <span id="periodLabel"></span></div>
+    </div>
+    <div class="spacer"></div>
+    <div class="kbd-hint"><span class="kbd">⌘K</span> quick find</div>
+    <button class="btn secondary" id="pdfBtn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right:4px;vertical-align:-1px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>Download PDF</button>
+  </div>
+
+  <div class="filterbar">
+    <div class="dropdown" id="dd-date">
+      <button class="chip" id="chipDate">Date: <strong id="chipDateLabel">All time</strong></button>
+      <div class="dropdown-menu">
+        <div class="dd-section">Presets</div>
+        <div class="option" data-preset="ytd">Year-to-date</div>
+        <div class="option" data-preset="qtr">This quarter</div>
+        <div class="option" data-preset="last12">Last 12 months</div>
+        <div class="option" data-preset="all">All time</div>
+        <div class="dd-section">Custom</div>
+        <div class="dd-date">
+          <input type="date" id="dfStart" />
+          <input type="date" id="dfEnd" />
+        </div>
+        <div class="dd-date" style="padding-top: 0;">
+          <button class="btn tiny" id="dfApply" style="width: 100%;">Apply custom</button>
+        </div>
+      </div>
+    </div>
+    <div class="dropdown" id="dd-sector"><button class="chip" id="chipSector">Sector</button><div class="dropdown-menu" id="ddSectorMenu"></div></div>
+    <div class="dropdown" id="dd-pole"><button class="chip" id="chipPole">Pole</button><div class="dropdown-menu" id="ddPoleMenu"></div></div>
+    <div class="dropdown" id="dd-originator"><button class="chip" id="chipOriginator">Originator</button><div class="dropdown-menu" id="ddOriginatorMenu"></div></div>
+    <div class="dropdown" id="dd-stage"><button class="chip" id="chipStage">Stage</button><div class="dropdown-menu" id="ddStageMenu"></div></div>
+    <div class="sep"></div>
+    <span class="chip" id="chipReset" style="background: transparent; border-color: transparent; color: var(--text-2);">Reset all</span>
+    <div class="spacer"></div>
+    <span id="filterResultCount" class="period-label" style="font-size: 11px;"></span>
+  </div>
+
+  <div class="content" id="contentRoot">
+
+<!-- ============ OVERVIEW (hero + existing reports) ============ -->
+<section class="tab-content active" data-tab="overview">
+  <div class="section-head">
+    <div>
+      <h1>Overview</h1>
+      <div class="sub">Your pipeline at a glance. <span id="overviewSub"></span></div>
+    </div>
+  </div>
+
+  <div class="hero">
+    <div class="brief">
+      <div class="head">
+        <h2>Morning Brief</h2>
+        <span class="when" id="briefWhen"></span>
+      </div>
+      <div id="briefList"></div>
+    </div>
+    <div class="metrics">
+      <div class="kpi" data-kpi="coverage">
+        <div class="label">Coverage Ratio</div>
+        <div class="value" id="kpi-coverage">—</div>
+        <div class="sub" id="kpi-coverage-sub">LOI+ in pipeline / target quarterly closes</div>
+        <canvas class="spark" id="spark-coverage" width="80" height="28"></canvas>
+      </div>
+      <div class="kpi">
+        <div class="label">Hit Rate (TTM)</div>
+        <div class="value" id="kpi-hit">—</div>
+        <div class="sub">Dossiers → LOI+ last 12 months</div>
+        <canvas class="spark" id="spark-hit" width="80" height="28"></canvas>
+      </div>
+      <div class="kpi">
+        <div class="label">Median Cycle Time</div>
+        <div class="value" id="kpi-cycle">—</div>
+        <div class="sub">Dossier → LOI, last 6 months</div>
+      </div>
+      <div class="kpi">
+        <div class="label">Pipeline Health Score</div>
+        <div class="value" id="kpi-health">—</div>
+        <div class="score-bar"><div class="score-bar-fill" id="kpi-health-bar"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid grid-4">
+    <div class="kpi"><div class="label">Dossiers received</div><div class="value" id="kpi-dossiers">—</div><div class="sub" id="kpi-dossiers-sub"></div></div>
+    <div class="kpi"><div class="label">LOIs sent</div><div class="value" id="kpi-lois">—</div><div class="sub" id="kpi-lois-sub"></div></div>
+    <div class="kpi"><div class="label">Active deals</div><div class="value" id="kpi-active">—</div></div>
+    <div class="kpi"><div class="label">Total tracked</div><div class="value" id="kpi-total">—</div></div>
+  </div>
+
+  <div class="grid grid-2" style="margin-top: 18px;">
+    <div class="panel"><h2>Cumulative dossiers received</h2><div class="chart-wrap"><canvas id="chartCumDossiers"></canvas></div></div>
+    <div class="panel"><h2>Cumulative LOIs sent</h2><div class="chart-wrap"><canvas id="chartCumLois"></canvas></div></div>
+  </div>
+
+  <div class="panel"><h2>Monthly new dossiers: build-up vs new platform</h2><div class="chart-wrap"><canvas id="chartMonthly"></canvas></div></div>
+
+  <div class="grid grid-2">
+    <div class="panel"><h2>Funnel: build-up vs new platform</h2><div class="chart-wrap"><canvas id="chartFunnel"></canvas></div></div>
+    <div class="panel"><h2>Portfolio by sector</h2><div class="chart-wrap"><canvas id="chartSector"></canvas></div></div>
+  </div>
+
+  <div class="grid grid-3-2">
+    <div class="panel">
+      <h2>Originator view</h2>
+      <table>
+        <thead><tr><th>Originator</th><th class="num">Total</th><th class="num">Active</th><th class="num">LOI+</th><th class="num">Closed</th></tr></thead>
+        <tbody id="tblOriginators"></tbody>
+      </table>
+    </div>
+    <div class="panel">
+      <h2>Top 10 M&amp;A firms by volume</h2>
+      <table>
+        <thead><tr><th>#</th><th>Firm</th><th class="num">Deals</th></tr></thead>
+        <tbody id="tblIntroducers"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ============ INSIGHTS & FORECAST (the new headline tab) ============ -->
+<section class="tab-content" data-tab="insights">
+  <div class="section-head">
+    <div>
+      <h1>Insights &amp; Forecast</h1>
+      <div class="sub">The forward-looking layer. Coverage, forecast, health score, cohorts, sourcing efficiency, load balancing, dry-spell alerts.</div>
+    </div>
+  </div>
+
+  <!-- Health Score panel (big) -->
+  <div class="grid grid-3-2">
+    <div class="panel">
+      <h2>Pipeline Health Score <span class="badge" id="healthBadge">—</span></h2>
+      <div class="desc">Composite 0-100 score. Combines coverage ratio, velocity vs baseline, kill-rate trend and data quality. Shows breakdown below.</div>
+      <div class="chart-wrap short"><canvas id="chartHealthBreakdown"></canvas></div>
+    </div>
+    <div class="panel">
+      <h2>Forecast: expected closes next quarter</h2>
+      <div class="desc">Each active deal's historical stage-conversion probability, summed. Range shows variance around the expected value.</div>
+      <div style="text-align: center; padding: 20px 0;">
+        <div style="font-size: 56px; font-weight: 700; color: var(--accent); line-height: 1; font-variant-numeric: tabular-nums;" id="forecastValue">—</div>
+        <div style="font-size: 12px; color: var(--text-2); margin-top: 6px;">expected deals to close next quarter</div>
+        <div style="font-size: 13px; color: var(--text-0); margin-top: 12px;" id="forecastRange">—</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stage conversion vs benchmark -->
+  <div class="panel">
+    <h2>Stage conversion vs industry benchmark</h2>
+    <div class="desc">Your conversion rate at each transition, compared to typical PE LMM healthy ranges. Red highlights the leakiest stage: that's the biggest operational lever.</div>
+    <div id="benchmarkTable"></div>
+  </div>
+
+  <div class="grid grid-2">
+    <div class="panel">
+      <h2>Cohort survival curves</h2>
+      <div class="desc">Each line is a monthly cohort of dossiers. Y-axis = % still alive (not Closé or Abandonné) at month N. A steeper drop = recent cohorts dying faster.</div>
+      <div class="chart-wrap tall"><canvas id="chartCohort"></canvas></div>
+    </div>
+    <div class="panel">
+      <h2>Source efficiency 2×2</h2>
+      <div class="desc">X: volume of deals introduced. Y: % past Pré-Screening. Bubble size = avg ticket €M. Double down on the top-right quadrant, cut time on top-left.</div>
+      <div class="chart-wrap tall"><canvas id="chartSourceScatter"></canvas></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Smart insights &amp; alerts</h2>
+    <div class="desc">Auto-generated nudges based on anomaly rules. Review weekly.</div>
+    <div id="smartInsights"></div>
+  </div>
+
+  <div class="grid grid-2">
+    <div class="panel">
+      <h2>Originator load-balancing</h2>
+      <div class="desc">Active deals per originator per stage. Red cells flag hotspots above the team 80th percentile.</div>
+      <div id="loadHeatmap"></div>
+    </div>
+    <div class="panel">
+      <h2>Pole dry-spell radar</h2>
+      <div class="desc">Days since last dossier vs each pole's typical interval. High z-score = unusual dry spell. Worth activating targeted sourcing.</div>
+      <table>
+        <thead><tr><th>Pole</th><th class="num">Days since last</th><th class="num">Typical</th><th class="num">Status</th></tr></thead>
+        <tbody id="tblDrySpell"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="grid grid-2">
+    <div class="panel">
+      <h2>Aging pyramid</h2>
+      <div class="desc">Age buckets for active deals. Zombies &gt; 90 days in current stage are the biggest mental-bandwidth tax.</div>
+      <div class="chart-wrap"><canvas id="chartAging"></canvas></div>
+    </div>
+    <div class="panel">
+      <h2>Source concentration (HHI)</h2>
+      <div class="desc">Herfindahl-Hirschman index of introducer firms. Higher = more fragile. &lt;1500 healthy, 1500-2500 moderate, &gt;2500 concentrated.</div>
+      <div style="text-align: center; padding: 22px 0;">
+        <div style="font-size: 52px; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums;" id="hhiValue">—</div>
+        <div style="font-size: 12px; color: var(--text-2); margin-top: 4px;" id="hhiStatus">—</div>
+      </div>
+      <div class="bar-row" style="margin-top: 12px;"><div class="label">Top 3 share</div><div class="bar-bg"><div class="bar-fill" id="top3Bar"></div></div><div class="val" id="top3Val">—</div></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Velocity trend (rolling 3-month median)</h2>
+    <div class="desc">Median days from dossier to LOI, rolling. Early warning for process drag.</div>
+    <div class="chart-wrap"><canvas id="chartVelocityTrend"></canvas></div>
+  </div>
+</section>
+
+<!-- ============ QUARTERLY ============ -->
+<section class="tab-content" data-tab="quarterly">
+  <div class="section-head"><div><h1>Quarterly</h1><div class="sub">Cadence view and QoQ growth. This tab ignores the date filter to show full trend.</div></div></div>
+  <div class="grid grid-4">
+    <div class="kpi"><div class="label">This quarter</div><div class="value" id="kpi-q-this">—</div><div class="delta" id="kpi-q-this-delta"></div></div>
+    <div class="kpi"><div class="label">Last quarter</div><div class="value" id="kpi-q-last">—</div></div>
+    <div class="kpi"><div class="label">YTD</div><div class="value" id="kpi-q-ytd">—</div><div class="delta" id="kpi-q-ytd-delta"></div></div>
+    <div class="kpi"><div class="label">Prior YTD</div><div class="value" id="kpi-q-pytd">—</div></div>
+  </div>
+
+  <div class="grid grid-2">
+    <div class="panel"><h2>Dossiers received by quarter</h2><div class="chart-wrap"><canvas id="chartQDossiers"></canvas></div></div>
+    <div class="panel"><h2>LOIs sent by quarter</h2><div class="chart-wrap"><canvas id="chartQLois"></canvas></div></div>
+  </div>
+
+  <div class="panel">
+    <h2>Dossiers per originator, by quarter</h2>
+    <div class="desc">Last 6 quarters. Who's sourcing what.</div>
+    <div class="scroll"><table id="tblOrigQuarter"><thead><tr><th>Originator</th></tr></thead><tbody></tbody></table></div>
+  </div>
+
+  <div class="panel">
+    <h2>Sector × quarter with QoQ growth</h2>
+    <div class="desc">Pipeline-by-theme table with quarter-on-quarter % growth for the most recent step.</div>
+    <div class="scroll"><table id="tblSectorQuarter"><thead><tr><th>Sector</th></tr></thead><tbody></tbody></table></div>
+  </div>
+
+  <div class="panel">
+    <h2>Top sector mini-trends (last 6 quarters)</h2>
+    <div id="sectorMinis" class="grid grid-3"></div>
+  </div>
+
+  <div class="grid grid-2">
+    <div class="panel"><h2>Days from dossier to close</h2><div class="desc">Won deals only. The "meetings till investment" leaderboard.</div><div class="scroll"><table><thead><tr><th>Company</th><th>Closed</th><th class="num">Days</th></tr></thead><tbody id="tblDaysToWin"></tbody></table></div></div>
+    <div class="panel"><h2>Days from dossier to killed</h2><div class="desc">Slow kills = process drag, fast kills = decisive triage.</div><div class="scroll"><table><thead><tr><th>Company</th><th>Killed</th><th class="num">Days alive</th></tr></thead><tbody id="tblDaysToKill"></tbody></table></div></div>
+  </div>
+</section>
+
+<!-- ============ FUNNEL & VELOCITY ============ -->
+<section class="tab-content" data-tab="funnel">
+  <div class="section-head"><div><h1>Funnel &amp; Velocity</h1><div class="sub">Stage conversion, time in stage, where deals die.</div></div></div>
+  <div class="grid grid-3">
+    <div class="kpi"><div class="label">Avg days dossier → LOI</div><div class="value" id="kpi-velocity-loi">—</div></div>
+    <div class="kpi"><div class="label">Avg days dossier → close</div><div class="value" id="kpi-velocity-close">—</div></div>
+    <div class="kpi"><div class="label">Avg days dossier → killed</div><div class="value" id="kpi-velocity-kill">—</div></div>
+  </div>
+
+  <div class="panel"><h2>Stage conversion funnel</h2><div class="desc">How many entries reached each stage in the period.</div><div class="chart-wrap tall"><canvas id="chartConvFunnel"></canvas></div></div>
+
+  <div class="grid grid-2">
+    <div class="panel"><h2>Stage-to-stage conversion %</h2><table><thead><tr><th>Transition</th><th class="num">Reached</th><th class="num">Conversion</th></tr></thead><tbody id="tblStageConv"></tbody></table></div>
+    <div class="panel"><h2>Average days in each stage</h2><div class="desc">Computed from stamped stage-history dates.</div><div class="chart-wrap"><canvas id="chartStageDuration"></canvas></div></div>
+  </div>
+
+  <div class="grid grid-2">
+    <div class="panel"><h2>Where deals die</h2><div class="chart-wrap"><canvas id="chartDeathStage"></canvas></div></div>
+    <div class="panel"><h2>Top reasons for loss</h2><div id="lossReasons"></div></div>
+  </div>
+</section>
+
+<!-- ============ LOSS ANALYSIS ============ -->
+<section class="tab-content" data-tab="loss">
+  <div class="section-head"><div><h1>Loss Analysis</h1><div class="sub">Why deals get killed, where in the funnel, and what the patterns say.</div></div></div>
+  <div class="grid grid-4">
+    <div class="kpi"><div class="label">Killed in period</div><div class="value" id="kpi-killed">—</div></div>
+    <div class="kpi"><div class="label">Kill rate</div><div class="value" id="kpi-killrate">—</div></div>
+    <div class="kpi"><div class="label">Avg days alive before kill</div><div class="value" id="kpi-avgkillage">—</div></div>
+    <div class="kpi"><div class="label">Top kill reason</div><div class="value" id="kpi-topreason" style="font-size: 16px;">—</div></div>
+  </div>
+
+  <div class="panel"><h2>Last stage before killed</h2><div class="desc">Where in the funnel deals die. The "Last Status Before Passed" view from the reference report.</div><div class="chart-wrap"><canvas id="chartLastStageBeforeKill"></canvas></div></div>
+
+  <div class="grid grid-2">
+    <div class="panel"><h2>Pass reasons (all kills)</h2><div class="chart-wrap"><canvas id="chartPassReasons"></canvas></div></div>
+    <div class="panel"><h2>Pass reason × sector cross-tab</h2><div id="heatmapReasonSector"></div></div>
+  </div>
+
+  <div class="panel"><h2>Pass reason × stage cross-tab</h2><div class="desc">Where each loss reason bites in the funnel. Valuation killing deals at DD means the team should screen valuation earlier.</div><div id="heatmapReasonStage"></div></div>
+
+  <div class="panel"><h2>Killed deals leaderboard</h2><div class="scroll"><table><thead><tr><th>Company</th><th>Sector</th><th>Pole</th><th>Originator</th><th>Reason(s)</th><th class="num">Days alive</th></tr></thead><tbody id="tblKilled"></tbody></table></div></div>
+</section>
+
+<!-- ============ WATCHLIST (was Action Center) ============ -->
+<section class="tab-content" data-tab="watchlist">
+  <div class="section-head"><div><h1>Watchlist</h1><div class="sub">Your operational queue. Stale deals, missing data, recent adds.</div></div></div>
+  <div class="grid grid-4">
+    <div class="kpi"><div class="label">Stale (&gt;60 days)</div><div class="value" id="kpi-stale">—</div></div>
+    <div class="kpi"><div class="label">LOI+ missing ticket</div><div class="value" id="kpi-loimissing">—</div></div>
+    <div class="kpi"><div class="label">Pre-CI missing ticket</div><div class="value" id="kpi-preci">—</div></div>
+    <div class="kpi"><div class="label">Deals without owner</div><div class="value" id="kpi-noowner">—</div></div>
+  </div>
+
+  <div class="panel"><h2>Stale deals (open &gt; 60 days)</h2><div class="desc">Deals where the dossier was received over 60 days ago. Move them or kill them.</div><div class="scroll"><table><thead><tr><th>Company</th><th>Stage</th><th>Pole</th><th>Originator</th><th class="num">Days open</th></tr></thead><tbody id="tblStale"></tbody></table></div></div>
+
+  <div class="grid grid-2">
+    <div class="panel"><h2>Pre-CI entries missing Ticket Size</h2><div class="desc">The original Harold ask, surfaced as an audit list.</div><div class="scroll"><table><thead><tr><th>Company</th><th>Stage</th><th>Originator</th></tr></thead><tbody id="tblPreCI"></tbody></table></div></div>
+    <div class="panel"><h2>LOI+ entries missing Ticket Size</h2><div class="scroll"><table><thead><tr><th>Company</th><th>Stage</th><th>Originator</th></tr></thead><tbody id="tblLoiMissing"></tbody></table></div></div>
+  </div>
+
+  <div class="panel"><h2>Data quality scorecard</h2><div class="desc">Coverage of key fields across open deals.</div><div id="dataQuality"></div></div>
+
+  <div class="panel"><h2>Recently added (last 7 days)</h2><div class="scroll"><table><thead><tr><th>Company</th><th>Stage</th><th>Pole</th><th>Sector</th><th>Originator</th><th>Added</th></tr></thead><tbody id="tblRecent"></tbody></table></div></div>
+</section>
+
+<!-- ============ TEAM ============ -->
+<section class="tab-content" data-tab="team">
+  <div class="section-head"><div><h1>Team</h1><div class="sub">Per-originator scorecard, workload, specialisation.</div></div></div>
+  <div class="panel">
+    <h2>Originator scorecard</h2>
+    <div class="desc">Sourced, active, LOI+, won, killed, win rate, avg days to LOI, pipeline ticket €M.</div>
+    <table id="tblOrigScorecard">
+      <thead><tr><th>Originator</th><th class="num">Sourced</th><th class="num">Active</th><th class="num">LOI+</th><th class="num">Won</th><th class="num">Killed</th><th class="num">Win %</th><th class="num">Avg d→LOI</th><th class="num">Pipeline €M</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <div class="grid grid-2">
+    <div class="panel"><h2>Active workload per originator</h2><div class="chart-wrap"><canvas id="chartWorkload"></canvas></div></div>
+    <div class="panel"><h2>Last activity per originator</h2><table><thead><tr><th>Originator</th><th>Last dossier</th><th class="num">Days ago</th></tr></thead><tbody id="tblLastActivity"></tbody></table></div>
+  </div>
+
+  <div class="panel"><h2>Originator × sector specialisation</h2><div id="heatmapOrigSector"></div></div>
+</section>
+
+<!-- ============ SOURCES ============ -->
+<section class="tab-content" data-tab="sources">
+  <div class="section-head"><div><h1>Sources</h1><div class="sub">Introducer firms, quality, concentration.</div></div></div>
+  <div class="grid grid-3">
+    <div class="kpi"><div class="label">Unique firms</div><div class="value" id="kpi-uniqintro">—</div></div>
+    <div class="kpi"><div class="label">Cold deals</div><div class="value" id="kpi-cold">—</div></div>
+    <div class="kpi"><div class="label">Repeat firms (≥2)</div><div class="value" id="kpi-repeat">—</div></div>
+  </div>
+
+  <div class="panel"><h2>Introducer quality ranking</h2><div class="desc">Sorted by quality (% past Pre-Screening), then volume.</div><table id="tblIntroQuality"><thead><tr><th>#</th><th>Firm</th><th class="num">Deals</th><th class="num">Past pre-screen</th><th class="num">Quality</th><th class="num">LOI+</th><th class="num">Won</th></tr></thead><tbody></tbody></table></div>
+
+  <div class="grid grid-2">
+    <div class="panel"><h2>Cold vs warm</h2><div class="chart-wrap"><canvas id="chartColdWarm"></canvas></div></div>
+    <div class="panel"><h2>Repeat vs one-off</h2><div class="chart-wrap"><canvas id="chartRepeat"></canvas></div></div>
+  </div>
+
+  <div class="panel"><h2>Top 5 firms × sector mix</h2><div id="heatmapIntroSector"></div></div>
+</section>
+
+<!-- ============ SECTORS & POLES ============ -->
+<section class="tab-content" data-tab="sectors">
+  <div class="section-head"><div><h1>Sectors &amp; Poles</h1><div class="sub">Coverage, concentration, trends.</div></div></div>
+  <div class="panel"><h2>Pole loading</h2><div class="desc">Active deals per pole broken down by current stage.</div><div class="chart-wrap tall"><canvas id="chartPoleLoad"></canvas></div></div>
+  <div class="panel"><h2>Sector × pole heatmap</h2><div class="desc">Empty cells are coverage gaps. Potential new theses.</div><div id="heatmapSectorPole"></div></div>
+  <div class="grid grid-2">
+    <div class="panel"><h2>Sector trend</h2><div class="chart-wrap"><canvas id="chartSectorTrend"></canvas></div></div>
+    <div class="panel"><h2>Avg ticket by sector (€M)</h2><div class="chart-wrap"><canvas id="chartTicketSector"></canvas></div></div>
+  </div>
+</section>
+
+<!-- ============ ALL DEALS ============ -->
+<section class="tab-content" data-tab="alldeals">
+  <div class="section-head"><div><h1>All Deals</h1><div class="sub">Searchable, sortable, full table.</div></div></div>
+  <div class="panel">
+    <input type="search" class="search-input" id="dealSearch" placeholder="Search by company, stage, pole, sector, originator, introducer..." />
+    <div class="scroll"><table id="tblAllDeals"><thead><tr>
+      <th data-sort="company">Company</th>
+      <th data-sort="stage">Stage</th>
+      <th data-sort="pole">Pole</th>
+      <th data-sort="sector">Sector</th>
+      <th data-sort="originator">Originator</th>
+      <th data-sort="introducer">Introducer</th>
+      <th data-sort="dossier_date">Added</th>
+      <th class="num" data-sort="days">Days open</th>
+      <th class="num" data-sort="ticket">Ticket €M</th>
+    </tr></thead><tbody></tbody></table></div>
+  </div>
+</section>
+
+  </div>
+</main>
+
+<!-- ============ Command palette ============ -->
+<div class="palette-overlay" id="paletteOverlay">
+  <div class="palette" id="palette">
+    <input type="text" class="palette-input" id="paletteInput" placeholder="Jump to a tab, deal, originator, sector, or action..." />
+    <div class="palette-list" id="paletteList"></div>
+    <div class="palette-footer">
+      <span>↑↓ navigate &nbsp;·&nbsp; ↵ select &nbsp;·&nbsp; esc close</span>
+      <span>⌘K</span>
+    </div>
+  </div>
+</div>
+
+<!-- ============ Deal drilldown drawer ============ -->
+<div class="drawer-overlay" id="drawerOverlay"></div>
+<div class="drawer" id="drawer">
+  <button class="close" id="drawerClose">✕</button>
+  <div id="drawerContent"></div>
+</div>
+
+<!-- ============ PDF progress modal ============ -->
+<div class="pdf-modal" id="pdfModal">
+  <div class="box">
+    <h3>Generating PDF report</h3>
+    <div class="sub">Rendering charts, assembling pages, applying branding.</div>
+    <div class="progressbar"><div class="fill" id="pdfProgress"></div></div>
+    <div class="status" id="pdfStatus">Initializing…</div>
+  </div>
+</div>
+
+<!-- Print stage for off-screen light-themed chart rendering -->
+<div id="print-stage"></div>
+
+<script id="payload" type="application/json">{"_":"PAYLOAD_PLACEHOLDER — replaced at build time"}</script>
+<script>
+// ========== Theme (white-label ready) ==========
+const theme = {
+  name: 'EVOLEM Plateforme',
+  customerName: 'EVOLEM Plateforme',
+  productName: 'Advanced Reports',
+  accent: '#6aa9ff',
+  accentHex: '#6aa9ff',
+  accentRgb: [106, 169, 255],
+  palette: ['#6aa9ff', '#f2c879', '#6ee7a8', '#ff7e7e', '#b48dff', '#5fd3c8', '#ffb86b', '#888fa3'],
+  logoUrl: 'assets/80x-logo.png',
+  locale: 'fr-FR',
+  footerText: 'Confidential: for internal use only',
+  builtBy: '80x',
+};
+
+// ========== Payload, constants ==========
+const data = JSON.parse(document.getElementById('payload').textContent);
+const ROWS = data.rows;
+const STAGES = data.stages_in_order;
+const LOI_STAGES = new Set(data.loi_stages);
+const CLOSED = new Set(data.closed_stages);
+const NEW_POLE = data.new_platform_pole;
+const KILL_STAGE = "Abandonné / Fermé";
+const WIN_STAGE = "Closé";
+
+// Sector normalization: collapse free-text sector values into 6 canonical buckets
+// (set up by Harold last year) plus an "Autres" catch-all. Handles compound
+// values like "Service; Services aux particuliers" by picking the first match.
+const SECTOR_ALIASES = {
+  "Industrie": "Industrie",
+  "Ingénierie industrielle": "Industrie",
+  "BTP": "Industrie",
+  "Construction": "Industrie",
+  "Chimie": "Industrie",
+  "Packaging / Emballages": "Industrie",
+  "Service": "Service",
+  "Services aux particuliers": "Service",
+  "Service B2B": "Service",
+  "Service B2C": "Service",
+  "Service B2B; Service B2C": "Service",
+  "Services financiers": "Service",
+  "Finance": "Service",
+  "Assurance": "Service",
+  "Immobilier": "Service",
+  "Hôtellerie": "Service",
+  "Restauration": "Service",
+  "Transport": "Service",
+  "Transports": "Service",
+  "Logistique": "Service",
+  "Mobilité": "Service",
+  "Conseil": "Service",
+  "Ingénierie": "Service",
+  "Education": "Service",
+  "Formation": "Service",
+  "RH": "Service",
+  "Sport": "Service",
+  "Loisirs": "Service",
+  "Divertissement": "Service",
+  "Evenementiel": "Service",
+  "Distribution": "Service",
+  "Distribution BtoB": "Service",
+  "E-commerce": "Service",
+  "E-commece": "Service",
+  "Fonds": "Service",
+  "Impact": "Service",
+  "Insertion par l'activité économique": "Service",
+  "Conso": "Conso",
+  "Biens de consommation": "Conso",
+  "Consumer good and services": "Conso",
+  "Alimentation": "Conso",
+  "Agro-alimentaire": "Conso",
+  "Food": "Conso",
+  "Agriculture": "Conso",
+  "Alimentation animale": "Conso",
+  "Gastronomie": "Conso",
+  "Mode": "Conso",
+  "Textile": "Conso",
+  "Luxe": "Conso",
+  "Santé": "Santé",
+  "Cosmétiques": "Santé",
+  "Technologies Médias Télécommunications (TMT)": "TMT (techno. media. telecom)",
+  "TMT (techno. media. telecom)": "TMT (techno. media. telecom)",
+  "Système d'information": "TMT (techno. media. telecom)",
+  "Technology": "TMT (techno. media. telecom)",
+  "Technologies": "TMT (techno. media. telecom)",
+  "Informatique": "TMT (techno. media. telecom)",
+  "Télécom": "TMT (techno. media. telecom)",
+  "Saas B2B": "TMT (techno. media. telecom)",
+  "Logiciel B2B": "TMT (techno. media. telecom)",
+  "Logiciel de gestion": "TMT (techno. media. telecom)",
+  "Data Analytics": "TMT (techno. media. telecom)",
+  "Adtech": "TMT (techno. media. telecom)",
+  "IA": "TMT (techno. media. telecom)",
+  "Cybersécurité": "TMT (techno. media. telecom)",
+  "Fashiontech": "TMT (techno. media. telecom)",
+  "Legaltech": "TMT (techno. media. telecom)",
+  "Greentech": "TMT (techno. media. telecom)",
+  "Smartcity": "TMT (techno. media. telecom)",
+  "Vidéo": "TMT (techno. media. telecom)",
+  "Communication": "TMT (techno. media. telecom)",
+  "Energie Environnement et Utilities": "Energie / Environnement / Utilities",
+  "Energie / Environnement / Utilities": "Energie / Environnement / Utilities",
+  "Energie": "Energie / Environnement / Utilities",
+  "Environnement, tri, recyclage": "Energie / Environnement / Utilities",
+  "Environnement": "Energie / Environnement / Utilities",
+  "Economie Circulaire": "Energie / Environnement / Utilities",
+  "Oil & Gas": "Energie / Environnement / Utilities",
+  "Qualité de l'air": "Energie / Environnement / Utilities",
+};
+function normalizeSector(raw) {
+  if (!raw) return null;
+  if (SECTOR_ALIASES[raw]) return SECTOR_ALIASES[raw];
+  if (raw.includes(";")) {
+    for (const part of raw.split(";")) {
+      const t = part.trim();
+      if (SECTOR_ALIASES[t]) return SECTOR_ALIASES[t];
+    }
+  }
+  return "Autres";
+}
+ROWS.forEach(r => { r.sector = normalizeSector(r.sector); });
+
+// Stage-history date field lookup (on each row)
+const STAGE_DATE_FIELD = {
+  "Dossier reçu": "dossier_date",
+  "Pre-Screening": "pre_screening_date",
+  "ManPres / Q&A / Coffee": "manpres_date",
+  "Pré-CI": "pre_ic_date",
+  "LOI Submitted": "loi_date",
+  "Due diligence": "due_diligence_date",
+  "Closé": "closed_date"
+};
+
+// Industry healthy ranges for benchmark comparisons
+const BENCHMARKS = {
+  "Dossier reçu → Pre-Screening": { low: 50, healthy: [60, 75], elite: 80 },
+  "Pre-Screening → ManPres / Q&A / Coffee": { low: 25, healthy: [30, 45], elite: 50 },
+  "ManPres / Q&A / Coffee → Pré-CI": { low: 35, healthy: [40, 55], elite: 60 },
+  "Pré-CI → LOI Submitted": { low: 30, healthy: [35, 50], elite: 55 },
+  "LOI Submitted → Due diligence": { low: 60, healthy: [70, 85], elite: 90 },
+  "Due diligence → Closé": { low: 20, healthy: [25, 40], elite: 45 }
+};
+
+// Chart.js defaults (dark)
+const palette = {
+  accent: theme.accent, accent2: '#f2c879', accent3: '#b48dff',
+  good: '#6ee7a8', bad: '#ff7e7e', warn: '#ffb86b',
+  grid: 'rgba(255,255,255,0.05)', tick: '#6b7387',
+  sectorPalette: theme.palette
+};
+if (typeof Chart !== 'undefined') {
+  Chart.defaults.color = palette.tick;
+  Chart.defaults.borderColor = palette.grid;
+  Chart.defaults.font.family = '-apple-system, BlinkMacSystemFont, "Segoe UI", Inter, sans-serif';
+  Chart.defaults.font.size = 11;
+}
+
+// Shared chart registry
+const charts = {};
+function destroyCharts() { Object.values(charts).forEach(c => c && c.destroy && c.destroy()); for (const k in charts) delete charts[k]; }
+
+// ========== Helpers ==========
+function fmtDate(d) { return d.toISOString().slice(0, 10); }
+function parseD(s) { return s ? new Date(s) : null; }
+function daysBetween(a, b) { if (!a || !b) return null; return Math.round((new Date(b) - new Date(a)) / 86400000); }
+function avg(nums) { const f = nums.filter(n => n != null && !isNaN(n)); return f.length ? Math.round(f.reduce((a,b) => a+b, 0) / f.length) : null; }
+function median(nums) {
+  const f = nums.filter(n => n != null && !isNaN(n)).slice().sort((a,b) => a-b);
+  if (!f.length) return null;
+  const m = Math.floor(f.length / 2);
+  return f.length % 2 ? f[m] : Math.round((f[m-1] + f[m]) / 2);
+}
+function percentile(nums, p) {
+  const f = nums.filter(n => n != null && !isNaN(n)).slice().sort((a,b) => a-b);
+  if (!f.length) return null;
+  const idx = Math.floor((f.length - 1) * p / 100);
+  return f[idx];
+}
+function fmtM(n) { return n == null ? '—' : (n / 1000000).toFixed(1); }
+function fmtPct(n) { return n == null ? '—' : n + '%'; }
+function fmtInt(n) { return n == null ? '—' : n.toLocaleString(theme.locale); }
+function fmtDays(n) { return n == null ? '—' : n + ' d'; }
+function quarterKey(d) {
+  if (!d) return null;
+  const dt = new Date(d);
+  const q = Math.floor(dt.getMonth() / 3) + 1;
+  return `${dt.getFullYear()}-Q${q}`;
+}
+function shiftQuarter(qk, n) {
+  const [y, q] = qk.split('-Q').map(Number);
+  let yy = y, qq = q + n;
+  while (qq < 1) { qq += 4; yy -= 1; }
+  while (qq > 4) { qq -= 4; yy += 1; }
+  return `${yy}-Q${qq}`;
+}
+function currentQuarter() { return quarterKey(new Date()); }
+function lastNQuarters(n) {
+  const out = [];
+  let qk = currentQuarter();
+  for (let i = 0; i < n; i++) { out.unshift(qk); qk = shiftQuarter(qk, -1); }
+  return out;
+}
+function qoqDelta(curr, prev) {
+  if (prev == null || prev === 0) return curr > 0 ? '∅' : '0%';
+  const p = Math.round(((curr - prev) / prev) * 100);
+  return (p >= 0 ? '+' : '') + p + '%';
+}
+function qoqClass(curr, prev) {
+  if (prev == null || prev === 0) return 'neutral';
+  return curr >= prev ? 'good' : 'bad';
+}
+function isBuildup(r) { return r.pole ? (r.pole !== NEW_POLE) : null; }
+function inRange(d, start, end) { if (!d) return false; const t = new Date(d).getTime(); return t >= start.getTime() && t <= end.getTime(); }
+
+// ========== Global state ==========
+const state = {
+  filters: {
+    dateStart: new Date(2000, 0, 1),
+    dateEnd: new Date(),
+    datePreset: 'all',
+    sectors: new Set(),
+    poles: new Set(),
+    originators: new Set(),
+    stages: new Set(),
+  },
+  filtered: [],
+  agg: null,
+  currentTab: 'overview'
+};
+
+// ========== Filter application ==========
+function applyFilters() {
+  const f = state.filters;
+  const endInclusive = new Date(f.dateEnd);
+  endInclusive.setHours(23, 59, 59, 999);
+  state.filtered = ROWS.filter(r => {
+    if (!inRange(r.dossier_date, f.dateStart, endInclusive)) return false;
+    if (f.sectors.size && !f.sectors.has(r.sector)) return false;
+    if (f.poles.size && !f.poles.has(r.pole)) return false;
+    if (f.stages.size && !f.stages.has(r.stage)) return false;
+    if (f.originators.size) {
+      const match = (r.originators || []).some(o => f.originators.has(o));
+      if (!match) return false;
+    }
+    return true;
+  });
+}
+
+// ========== Aggregation: builds the big agg object ==========
+function aggregate(rows) {
+  const periodRows = rows;
+  const loiRows = rows.filter(r => r.loi_date);
+
+  // Overview aggregates
+  const monthlyDossiers = {};
+  for (const r of periodRows) {
+    if (!r.dossier_date) continue;
+    const m = r.dossier_date.slice(0, 7);
+    if (!monthlyDossiers[m]) monthlyDossiers[m] = { total: 0, build_up: 0, new_platform: 0 };
+    monthlyDossiers[m].total += 1;
+    const bu = isBuildup(r);
+    if (bu === true) monthlyDossiers[m].build_up += 1;
+    else if (bu === false) monthlyDossiers[m].new_platform += 1;
+  }
+  const monthlyLois = {};
+  for (const r of loiRows) {
+    const m = r.loi_date.slice(0, 7);
+    if (!monthlyLois[m]) monthlyLois[m] = { total: 0, build_up: 0, new_platform: 0 };
+    monthlyLois[m].total += 1;
+    const bu = isBuildup(r);
+    if (bu === true) monthlyLois[m].build_up += 1;
+    else if (bu === false) monthlyLois[m].new_platform += 1;
+  }
+  function cumulate(monthly) {
+    const months = Object.keys(monthly).sort();
+    let total = 0;
+    return months.map(m => { total += monthly[m].total; return { month: m, value: total }; });
+  }
+
+  const stageIdx = {}; STAGES.forEach((s, i) => stageIdx[s] = i);
+  // CUMULATIVE funnel (not "spot"): count a deal at every stage up to the DEEPEST
+  // stage it ever reached, derived from the real stage-date history
+  // (STAGE_DATE_FIELD). This includes deals later killed (current stage
+  // "Abandonné / Fermé") and closed deals, so the funnel shows how many dossiers
+  // ever passed through each stage rather than a snapshot of where deals sit now.
+  const deepestStageIdx = (r) => {
+    let d = -1;
+    STAGES.forEach((s, i) => { const f = STAGE_DATE_FIELD[s]; if (f && r[f]) d = i; });
+    return d;
+  };
+  const funnelOverview = STAGES.map(s => ({ stage: s, new_platform: 0, build_up: 0, unknown: 0 }));
+  const reachedAt = STAGES.map(() => 0);
+  for (const r of periodRows) {
+    const deepest = deepestStageIdx(r);
+    if (deepest < 0) continue;
+    const bu = isBuildup(r);
+    const bucket = bu === true ? 'build_up' : bu === false ? 'new_platform' : 'unknown';
+    for (let i = 0; i <= deepest; i++) { funnelOverview[i][bucket] += 1; reachedAt[i] += 1; }
+  }
+  const stageConv = [];
+  for (let i = 1; i < STAGES.length; i++) {
+    const prev = reachedAt[i - 1], curr = reachedAt[i];
+    stageConv.push({ from: STAGES[i-1], to: STAGES[i], reached: curr, conv: prev > 0 ? Math.round((curr / prev) * 100) : 0 });
+  }
+
+  // Sectors
+  const sectors = {};
+  for (const r of periodRows) sectors[r.sector] = (sectors[r.sector] || 0) + 1;
+  const sectorList = Object.entries(sectors).map(([k, v]) => ({ sector: k, count: v })).sort((a,b) => b.count - a.count);
+  const allSectors = Array.from(new Set(periodRows.map(r => r.sector))).filter(Boolean);
+
+  // Originators
+  const expectedNames = ["Harold Odin","Oscar De Domecy","Samuel Saucourt","Victor d'Herouville","Alice D'Herve","Theo Dejours","Sandrine Escaleira","Julien de Bussy","Alexis Alfonsi"];
+  const orig = {};
+  for (const r of periodRows) {
+    const names = (r.originators && r.originators.length) ? r.originators : ["(unassigned)"];
+    for (const nm of names) {
+      if (!orig[nm]) orig[nm] = { name: nm, total: 0, active: 0, closed: 0, loi_plus: 0, won: 0, killed: 0, ticketSum: 0, daysToLoi: [], lastDossier: null };
+      orig[nm].total += 1;
+      if (CLOSED.has(r.stage)) orig[nm].closed += 1; else orig[nm].active += 1;
+      if (LOI_STAGES.has(r.stage)) orig[nm].loi_plus += 1;
+      if (r.stage === WIN_STAGE) orig[nm].won += 1;
+      if (r.stage === KILL_STAGE) orig[nm].killed += 1;
+      if (r.ticket && !CLOSED.has(r.stage)) orig[nm].ticketSum += r.ticket;
+      if (r.dossier_date && r.loi_date) {
+        const d = daysBetween(r.dossier_date, r.loi_date);
+        if (d != null && d >= 0) orig[nm].daysToLoi.push(d);
+      }
+      if (r.dossier_date && (!orig[nm].lastDossier || r.dossier_date > orig[nm].lastDossier)) orig[nm].lastDossier = r.dossier_date;
+    }
+  }
+  expectedNames.forEach(nm => { if (!orig[nm]) orig[nm] = { name: nm, total: 0, active: 0, closed: 0, loi_plus: 0, won: 0, killed: 0, ticketSum: 0, daysToLoi: [], lastDossier: null }; });
+  const originators = Object.values(orig).map(o => ({
+    ...o,
+    win_rate: o.total > 0 ? Math.round((o.loi_plus / o.total) * 100) : 0,
+    avg_days_loi: avg(o.daysToLoi)
+  })).sort((a, b) => b.total - a.total);
+
+  // Introducers
+  const intro = {};
+  for (const r of periodRows) if (r.introducer) intro[r.introducer] = (intro[r.introducer] || 0) + 1;
+  const topIntroducers = Object.entries(intro).map(([firm, deals]) => ({ firm, deals })).sort((a,b) => b.deals - a.deals).slice(0, 10);
+
+  // Velocity
+  const dossierToLoi = [], dossierToClose = [], dossierToKill = [];
+  for (const r of periodRows) {
+    if (r.dossier_date && r.loi_date) { const d = daysBetween(r.dossier_date, r.loi_date); if (d != null && d >= 0) dossierToLoi.push(d); }
+    if (r.dossier_date && r.closed_date) { const d = daysBetween(r.dossier_date, r.closed_date); if (d != null && d >= 0) dossierToClose.push(d); }
+    if (r.dossier_date && r.abandonne_ferme_date) { const d = daysBetween(r.dossier_date, r.abandonne_ferme_date); if (d != null && d >= 0) dossierToKill.push(d); }
+  }
+
+  // Stage durations
+  const stageDurations = {};
+  for (let i = 0; i < STAGES.length - 1; i++) {
+    const cur = STAGE_DATE_FIELD[STAGES[i]], next = STAGE_DATE_FIELD[STAGES[i+1]];
+    if (!cur || !next) continue;
+    const diffs = [];
+    for (const r of periodRows) if (r[cur] && r[next]) { const d = daysBetween(r[cur], r[next]); if (d != null && d >= 0) diffs.push(d); }
+    stageDurations[STAGES[i]] = { avg: avg(diffs), n: diffs.length };
+  }
+
+  // Loss reasons
+  const lossReasons = {};
+  for (const r of periodRows) if (r.passed_reasons) for (const lr of r.passed_reasons) lossReasons[lr] = (lossReasons[lr] || 0) + 1;
+  const lossList = Object.entries(lossReasons).map(([reason, n]) => ({ reason, count: n })).sort((a,b) => b.count - a.count);
+
+  // Death stage
+  const deathStage = {};
+  for (const r of periodRows) {
+    if (r.stage !== KILL_STAGE) continue;
+    let deepest = null;
+    for (const s of STAGES) { const f = STAGE_DATE_FIELD[s]; if (f && r[f]) deepest = s; }
+    deepest = deepest || "(unknown)";
+    deathStage[deepest] = (deathStage[deepest] || 0) + 1;
+  }
+  const deathList = Object.entries(deathStage).map(([s, n]) => ({ stage: s, count: n })).sort((a,b) => b.count - a.count);
+
+  // Source quality
+  const introQ = {};
+  for (const r of periodRows) {
+    if (!r.introducer) continue;
+    if (!introQ[r.introducer]) introQ[r.introducer] = { firm: r.introducer, deals: 0, past_pre: 0, loi_plus: 0, won: 0, ticket_sum: 0, ticket_n: 0 };
+    introQ[r.introducer].deals += 1;
+    const idx = stageIdx[r.stage];
+    if (idx != null && idx >= stageIdx["ManPres / Q&A / Coffee"]) introQ[r.introducer].past_pre += 1;
+    if (LOI_STAGES.has(r.stage)) introQ[r.introducer].loi_plus += 1;
+    if (r.stage === WIN_STAGE) introQ[r.introducer].won += 1;
+    if (r.ticket) { introQ[r.introducer].ticket_sum += r.ticket; introQ[r.introducer].ticket_n += 1; }
+  }
+  const introQuality = Object.values(introQ).map(f => ({
+    ...f, quality: f.deals > 0 ? Math.round((f.past_pre / f.deals) * 100) : 0,
+    avg_ticket_m: f.ticket_n > 0 ? (f.ticket_sum / f.ticket_n / 1000000) : 0
+  })).sort((a,b) => (b.quality - a.quality) || (b.deals - a.deals));
+  const coldCount = periodRows.filter(r => !r.introducer).length;
+  const warmCount = periodRows.filter(r => !!r.introducer).length;
+  const repeatFirms = Object.values(intro).filter(n => n >= 2).length;
+  const oneOffFirms = Object.values(intro).filter(n => n === 1).length;
+  const uniqueIntros = Object.keys(intro).length;
+
+  // Intro x sector heatmap (top 5)
+  const top5Firms = introQuality.slice().sort((a,b) => b.deals - a.deals).slice(0, 5).map(f => f.firm);
+  const introSectorMatrix = top5Firms.map(firm => {
+    const row = { firm };
+    for (const s of allSectors) row[s] = 0;
+    for (const r of periodRows) if (r.introducer === firm && row[r.sector] != null) row[r.sector] += 1;
+    return row;
+  });
+
+  // Pole loading
+  const poleLoad = {};
+  for (const r of periodRows) { if (!r.pole) continue; if (!poleLoad[r.pole]) poleLoad[r.pole] = {}; poleLoad[r.pole][r.stage] = (poleLoad[r.pole][r.stage] || 0) + 1; }
+  const poleNames = Object.keys(poleLoad).sort();
+  const allPoles = Array.from(new Set(periodRows.map(r => r.pole))).filter(Boolean).sort();
+  const sectorPoleMatrix = allSectors.map(sector => {
+    const row = { sector };
+    for (const p of allPoles) row[p] = 0;
+    for (const r of periodRows) if (r.sector === sector && row[r.pole] != null) row[r.pole] += 1;
+    return row;
+  });
+
+  // Sector trend
+  const sectorTrendMap = {};
+  for (const r of periodRows) {
+    if (!r.dossier_date || !r.sector) continue;
+    const m = r.dossier_date.slice(0, 7);
+    if (!sectorTrendMap[m]) sectorTrendMap[m] = {};
+    sectorTrendMap[m][r.sector] = (sectorTrendMap[m][r.sector] || 0) + 1;
+  }
+  const trendMonths = Object.keys(sectorTrendMap).sort();
+  const sectorTrend = { months: trendMonths, sectors: allSectors, series: allSectors.map(s => trendMonths.map(m => sectorTrendMap[m][s] || 0)) };
+
+  // Avg ticket by sector
+  const ticketBySector = {};
+  for (const r of periodRows) { if (!r.ticket || !r.sector) continue; if (!ticketBySector[r.sector]) ticketBySector[r.sector] = []; ticketBySector[r.sector].push(r.ticket); }
+  const ticketSectorList = Object.entries(ticketBySector).map(([sector, list]) => ({ sector, avg_m: avg(list) / 1000000, n: list.length })).sort((a,b) => b.avg_m - a.avg_m);
+
+  // Watchlist / data quality
+  const now = new Date();
+  const sevenAgo = new Date(now); sevenAgo.setDate(now.getDate() - 7);
+  const sixtyAgo = new Date(now); sixtyAgo.setDate(now.getDate() - 60);
+  const stale = periodRows.filter(r => !CLOSED.has(r.stage) && r.dossier_date && new Date(r.dossier_date) < sixtyAgo)
+    .map(r => ({ ...r, days_open: daysBetween(r.dossier_date, now) })).sort((a,b) => b.days_open - a.days_open);
+  const preCiMissing = periodRows.filter(r => r.stage === "Pré-CI" && !r.ticket);
+  const loiMissing = periodRows.filter(r => LOI_STAGES.has(r.stage) && !r.ticket);
+  const noOwner = periodRows.filter(r => !r.originators || r.originators.length === 0);
+  const recent = periodRows.filter(r => r.dossier_date && new Date(r.dossier_date) >= sevenAgo).sort((a,b) => new Date(b.dossier_date) - new Date(a.dossier_date));
+  const openDeals = periodRows.filter(r => !CLOSED.has(r.stage));
+  function pct(fn) { if (!openDeals.length) return 0; return Math.round((openDeals.filter(fn).length / openDeals.length) * 100); }
+  const dataQuality = [
+    { label: "Pole set", pct: pct(r => !!r.pole) },
+    { label: "Sector set", pct: pct(r => r.sector && r.sector !== '(unset)') },
+    { label: "Originator set", pct: pct(r => r.originators && r.originators.length > 0) },
+    { label: "Introducer set", pct: pct(r => !!r.introducer) },
+    { label: "Ticket size set", pct: pct(r => !!r.ticket) },
+  ];
+
+  // ========== QUARTERLY (uses ALL ROWS) ==========
+  const quarters = lastNQuarters(8);
+  const recentQuarters = lastNQuarters(6);
+  const allQuarterDossiers = {}, allQuarterLois = {};
+  for (const r of ROWS) {
+    const dq = quarterKey(r.dossier_date);
+    if (dq) allQuarterDossiers[dq] = (allQuarterDossiers[dq] || 0) + 1;
+    const lq = quarterKey(r.loi_date);
+    if (lq) allQuarterLois[lq] = (allQuarterLois[lq] || 0) + 1;
+  }
+  const dossiersByQuarter = quarters.map(q => ({ q, count: allQuarterDossiers[q] || 0 }));
+  const loisByQuarter = quarters.map(q => ({ q, count: allQuarterLois[q] || 0 }));
+  const thisQ = currentQuarter(), lastQ = shiftQuarter(thisQ, -1);
+  const thisQDossiers = allQuarterDossiers[thisQ] || 0, lastQDossiers = allQuarterDossiers[lastQ] || 0;
+  const yearNow = new Date().getFullYear();
+  const ytdAll = ROWS.filter(r => r.dossier_date && new Date(r.dossier_date).getFullYear() === yearNow).length;
+  const priorYTD = ROWS.filter(r => {
+    if (!r.dossier_date) return false;
+    const d = new Date(r.dossier_date);
+    if (d.getFullYear() !== yearNow - 1) return false;
+    return d.getTime() <= new Date(yearNow - 1, new Date().getMonth(), new Date().getDate()).getTime();
+  }).length;
+  const origByQuarter = {};
+  for (const r of ROWS) {
+    const qk = quarterKey(r.dossier_date);
+    if (!qk || !recentQuarters.includes(qk)) continue;
+    const names = (r.originators && r.originators.length) ? r.originators : ["(unassigned)"];
+    for (const nm of names) { if (!origByQuarter[nm]) origByQuarter[nm] = {}; origByQuarter[nm][qk] = (origByQuarter[nm][qk] || 0) + 1; }
+  }
+  const origQuarterRows = Object.entries(origByQuarter).map(([name, qm]) => ({ name, byQ: qm, total: Object.values(qm).reduce((a,b)=>a+b,0) })).sort((a,b) => b.total - a.total);
+  const sectorByQuarter = {};
+  for (const r of ROWS) {
+    const qk = quarterKey(r.dossier_date);
+    if (!qk || !recentQuarters.includes(qk)) continue;
+    const sec = r.sector || '(unset)';
+    if (!sectorByQuarter[sec]) sectorByQuarter[sec] = {};
+    sectorByQuarter[sec][qk] = (sectorByQuarter[sec][qk] || 0) + 1;
+  }
+  const sectorQuarterRows = Object.entries(sectorByQuarter).map(([sec, qm]) => ({ sector: sec, byQ: qm, total: Object.values(qm).reduce((a,b)=>a+b,0) })).sort((a,b) => b.total - a.total);
+  const topSectorsForMini = sectorQuarterRows.slice(0, 6).map(r => r.sector);
+  const wonRows = ROWS.filter(r => r.stage === WIN_STAGE && r.dossier_date && r.closed_date).map(r => ({ company: r.company || '—', closed: r.closed_date, days: daysBetween(r.dossier_date, r.closed_date) })).filter(x => x.days != null && x.days >= 0).sort((a,b) => a.days - b.days);
+  const killedRowsAll = ROWS.filter(r => r.stage === KILL_STAGE && r.dossier_date && r.abandonne_ferme_date).map(r => ({ company: r.company || '—', killed: r.abandonne_ferme_date, days: daysBetween(r.dossier_date, r.abandonne_ferme_date) })).filter(x => x.days != null && x.days >= 0).sort((a,b) => b.days - a.days);
+
+  // ========== LOSS ANALYSIS ==========
+  const killedInPeriod = periodRows.filter(r => r.stage === KILL_STAGE);
+  const killRate = periodRows.length > 0 ? Math.round((killedInPeriod.length / periodRows.length) * 100) : 0;
+  const killAges = killedInPeriod.map(r => (r.dossier_date && r.abandonne_ferme_date) ? daysBetween(r.dossier_date, r.abandonne_ferme_date) : null).filter(d => d != null && d >= 0);
+  const avgKillAge = avg(killAges);
+  const lastStageBeforeKill = {};
+  for (const r of killedInPeriod) {
+    let deepest = null;
+    for (const s of STAGES) { if (s === KILL_STAGE) continue; const f = STAGE_DATE_FIELD[s]; if (f && r[f]) deepest = s; }
+    deepest = deepest || "(no stage history)";
+    lastStageBeforeKill[deepest] = (lastStageBeforeKill[deepest] || 0) + 1;
+  }
+  const lastStageList = Object.entries(lastStageBeforeKill).map(([s, n]) => ({ stage: s, count: n })).sort((a,b) => b.count - a.count);
+  const passReasonsKills = {};
+  for (const r of killedInPeriod) if (r.passed_reasons) for (const rsn of r.passed_reasons) passReasonsKills[rsn] = (passReasonsKills[rsn] || 0) + 1;
+  const passReasonsList = Object.entries(passReasonsKills).map(([reason, n]) => ({ reason, count: n })).sort((a,b) => b.count - a.count);
+  const topReason = passReasonsList[0] ? passReasonsList[0].reason : '—';
+  const reasonSectorMatrix = passReasonsList.map(rl => {
+    const row = { reason: rl.reason };
+    for (const s of allSectors) row[s] = 0;
+    for (const k of killedInPeriod) { if (!k.passed_reasons || !k.passed_reasons.includes(rl.reason)) continue; if (row[k.sector] != null) row[k.sector] += 1; }
+    return row;
+  });
+  const reasonStageMatrix = passReasonsList.map(rl => {
+    const row = { reason: rl.reason };
+    for (const s of STAGES.filter(x => x !== KILL_STAGE)) row[s] = 0;
+    for (const k of killedInPeriod) {
+      if (!k.passed_reasons || !k.passed_reasons.includes(rl.reason)) continue;
+      let deepest = null;
+      for (const s of STAGES) { if (s === KILL_STAGE) continue; const f = STAGE_DATE_FIELD[s]; if (f && k[f]) deepest = s; }
+      if (deepest && row[deepest] != null) row[deepest] += 1;
+    }
+    return row;
+  });
+  const killedList = killedInPeriod.map(r => ({
+    company: r.company || '—', sector: r.sector || '—', pole: r.pole || '—',
+    originator: (r.originators || []).join(', ') || '—',
+    reasons: (r.passed_reasons || []).join(', ') || '—',
+    days_alive: r.dossier_date && r.abandonne_ferme_date ? daysBetween(r.dossier_date, r.abandonne_ferme_date) : null
+  })).sort((a,b) => (b.days_alive||0) - (a.days_alive||0));
+
+  // ========== INSIGHTS: headline reports ==========
+  // Pipeline Coverage Ratio (LOI+ in pipeline / target quarterly closes)
+  // Target = avg historical closes per quarter (across all ROWS)
+  const historicalCloses = ROWS.filter(r => r.stage === WIN_STAGE).length;
+  const firstDossier = ROWS.map(r => r.dossier_date).filter(Boolean).sort()[0];
+  const quartersSpanned = firstDossier ? Math.max(1, Math.ceil(daysBetween(firstDossier, new Date()) / 91)) : 1;
+  const avgClosesPerQ = historicalCloses / quartersSpanned || 1;
+  const activeLOIPlus = ROWS.filter(r => LOI_STAGES.has(r.stage) && !CLOSED.has(r.stage)).length;
+  const coverageRatio = avgClosesPerQ > 0 ? (activeLOIPlus / avgClosesPerQ).toFixed(1) : '—';
+
+  // Historical conversion probabilities (all rows) — cumulative, from real stage
+  // history (deepest stage reached), so killed deals count toward every stage they
+  // actually passed through rather than being dropped.
+  const stageReachCount = {}; STAGES.forEach(s => stageReachCount[s] = 0);
+  for (const r of ROWS) {
+    const deepest = deepestStageIdx(r);
+    if (deepest < 0) continue;
+    for (let i = 0; i <= deepest; i++) stageReachCount[STAGES[i]] += 1;
+  }
+  const pCloseFromStage = {};
+  for (const s of STAGES) {
+    if (s === KILL_STAGE) { pCloseFromStage[s] = 0; continue; }
+    const reached = stageReachCount[s] || 0;
+    const reachedClose = stageReachCount[WIN_STAGE] || 0;
+    pCloseFromStage[s] = reached > 0 ? reachedClose / reached : 0;
+  }
+  // Forecast: sum(p(stage) for active deals)
+  const activeDeals = ROWS.filter(r => !CLOSED.has(r.stage));
+  let expectedCloses = 0, expectedVar = 0;
+  for (const r of activeDeals) {
+    const p = pCloseFromStage[r.stage] || 0;
+    expectedCloses += p;
+    expectedVar += p * (1 - p);
+  }
+  const expectedSd = Math.sqrt(expectedVar);
+  const forecastLow = Math.max(0, Math.round(expectedCloses - expectedSd));
+  const forecastHigh = Math.round(expectedCloses + expectedSd);
+
+  // Hit rate TTM
+  const ttmCutoff = new Date(); ttmCutoff.setFullYear(ttmCutoff.getFullYear() - 1);
+  const ttmRows = ROWS.filter(r => r.dossier_date && new Date(r.dossier_date) >= ttmCutoff);
+  const ttmLoiPlus = ttmRows.filter(r => LOI_STAGES.has(r.stage) || r.loi_date).length;
+  const hitRate = ttmRows.length > 0 ? Math.round((ttmLoiPlus / ttmRows.length) * 100) : 0;
+
+  // Median cycle time (dossier → LOI, last 6 months)
+  const sixMonthCutoff = new Date(); sixMonthCutoff.setMonth(sixMonthCutoff.getMonth() - 6);
+  const recentCycles = ROWS.filter(r => r.loi_date && new Date(r.loi_date) >= sixMonthCutoff)
+    .map(r => daysBetween(r.dossier_date, r.loi_date)).filter(d => d != null && d >= 0);
+  const medianCycle = median(recentCycles);
+
+  // Pipeline Health Score (0-100 composite)
+  // Components: coverage (0-25), velocity (0-25), killRate (0-25), dataQuality (0-25)
+  const covScore = Math.min(25, Math.max(0, (parseFloat(coverageRatio) / 5) * 25));
+  const velScore = medianCycle ? Math.min(25, Math.max(0, (75 / Math.max(medianCycle, 1)) * 25)) : 12;
+  const killScore = Math.max(0, 25 - Math.min(25, (killRate / 4)));
+  const dqAvg = dataQuality.reduce((s, d) => s + d.pct, 0) / (dataQuality.length || 1);
+  const dqScore = Math.min(25, dqAvg / 4);
+  const healthScore = Math.round(covScore + velScore + killScore + dqScore);
+  const healthBreakdown = [
+    { label: 'Coverage', value: Math.round(covScore), max: 25 },
+    { label: 'Velocity', value: Math.round(velScore), max: 25 },
+    { label: 'Kill discipline', value: Math.round(killScore), max: 25 },
+    { label: 'Data quality', value: Math.round(dqScore), max: 25 }
+  ];
+
+  // Benchmark comparison table
+  const benchmarkRows = stageConv.map(sc => {
+    const key = `${sc.from} → ${sc.to}`;
+    const bm = BENCHMARKS[key];
+    let status = 'neutral', label = 'No benchmark';
+    if (bm) {
+      if (sc.conv >= bm.elite) { status = 'good'; label = 'Elite'; }
+      else if (sc.conv >= bm.healthy[0]) { status = 'good'; label = 'Healthy'; }
+      else if (sc.conv >= bm.low) { status = 'warn'; label = 'Below healthy'; }
+      else { status = 'bad'; label = 'Poor'; }
+    }
+    return { ...sc, bm, status, label };
+  });
+
+  // Cohort survival curves: group dossiers by month, track survival at each month offset
+  const cohortGroups = {};
+  for (const r of ROWS) {
+    if (!r.dossier_date) continue;
+    const m = r.dossier_date.slice(0, 7);
+    if (!cohortGroups[m]) cohortGroups[m] = [];
+    cohortGroups[m].push(r);
+  }
+  const cohortMonths = Object.keys(cohortGroups).sort().slice(-6);
+  const cohortCurves = cohortMonths.map(m => {
+    const members = cohortGroups[m];
+    const start = new Date(m + '-01');
+    const curve = [];
+    const nowT = Date.now();
+    for (let offset = 0; offset <= 6; offset++) {
+      const checkpoint = new Date(start); checkpoint.setMonth(checkpoint.getMonth() + offset);
+      if (checkpoint.getTime() > nowT) break;
+      const alive = members.filter(r => {
+        if (!CLOSED.has(r.stage)) return true;
+        const endDate = r.end_date || r.closed_date || r.abandonne_ferme_date;
+        return endDate && new Date(endDate) > checkpoint;
+      }).length;
+      curve.push({ offset, pct: Math.round((alive / members.length) * 100) });
+    }
+    return { month: m, curve };
+  });
+
+  // Source efficiency 2x2 scatter data
+  const scatterData = introQuality.map(f => ({
+    firm: f.firm,
+    x: f.deals,
+    y: f.quality,
+    r: Math.max(4, Math.min(20, f.avg_ticket_m || 5))
+  }));
+
+  // Load balancing heatmap: originator x stage (active only)
+  const loadMatrix = {};
+  for (const r of ROWS) {
+    if (CLOSED.has(r.stage)) continue;
+    const names = (r.originators && r.originators.length) ? r.originators : ["(unassigned)"];
+    for (const nm of names) {
+      if (!loadMatrix[nm]) loadMatrix[nm] = {};
+      loadMatrix[nm][r.stage] = (loadMatrix[nm][r.stage] || 0) + 1;
+    }
+  }
+  // Compute 80th percentile cell value for hotspot flagging
+  const allLoadVals = [];
+  Object.values(loadMatrix).forEach(row => Object.values(row).forEach(v => allLoadVals.push(v)));
+  const load80 = percentile(allLoadVals, 80) || 3;
+  const loadRows = Object.entries(loadMatrix).map(([name, row]) => ({ name, row, total: Object.values(row).reduce((a,b) => a+b, 0) })).sort((a,b) => b.total - a.total);
+
+  // Pole dry-spell alerts
+  const poleStats = {};
+  for (const r of ROWS) {
+    if (!r.pole || !r.dossier_date) continue;
+    if (!poleStats[r.pole]) poleStats[r.pole] = { dates: [], last: null };
+    poleStats[r.pole].dates.push(r.dossier_date);
+    if (!poleStats[r.pole].last || r.dossier_date > poleStats[r.pole].last) poleStats[r.pole].last = r.dossier_date;
+  }
+  const drySpell = Object.entries(poleStats).map(([pole, s]) => {
+    const sorted = s.dates.slice().sort();
+    const intervals = [];
+    for (let i = 1; i < sorted.length; i++) {
+      const d = daysBetween(sorted[i-1], sorted[i]);
+      if (d != null) intervals.push(d);
+    }
+    const typical = intervals.length ? median(intervals) : null;
+    const daysSince = daysBetween(s.last, new Date());
+    let status = 'ok';
+    if (typical && daysSince > typical * 2) status = 'alert';
+    else if (typical && daysSince > typical * 1.5) status = 'warn';
+    return { pole, days_since: daysSince, typical, status, last: s.last };
+  }).sort((a,b) => (b.days_since||0) - (a.days_since||0));
+
+  // Aging pyramid (active deals by age bucket)
+  const agingBuckets = [
+    { label: '0-30', min: 0, max: 30, count: 0 },
+    { label: '31-60', min: 31, max: 60, count: 0 },
+    { label: '61-90', min: 61, max: 90, count: 0 },
+    { label: '91-120', min: 91, max: 120, count: 0 },
+    { label: '120+', min: 121, max: 999999, count: 0 }
+  ];
+  for (const r of ROWS) {
+    if (CLOSED.has(r.stage) || !r.dossier_date) continue;
+    const days = daysBetween(r.dossier_date, new Date());
+    if (days == null) continue;
+    for (const b of agingBuckets) if (days >= b.min && days <= b.max) { b.count += 1; break; }
+  }
+
+  // HHI introducer concentration
+  const introCounts = Object.values(intro);
+  const totalIntros = introCounts.reduce((a,b) => a+b, 0);
+  const hhi = totalIntros > 0 ? Math.round(introCounts.reduce((sum, c) => sum + Math.pow((c / totalIntros) * 100, 2), 0)) : 0;
+  let hhiStatus = 'Diversified';
+  if (hhi > 2500) hhiStatus = 'Concentrated (fragile)';
+  else if (hhi > 1500) hhiStatus = 'Moderate';
+  const sortedIntros = introCounts.slice().sort((a,b) => b-a);
+  const top3Sum = sortedIntros.slice(0, 3).reduce((a,b) => a+b, 0);
+  const top3Pct = totalIntros > 0 ? Math.round((top3Sum / totalIntros) * 100) : 0;
+
+  // Velocity trend: rolling 3-month median of dossier→LOI
+  const velocityTrendMap = {};
+  for (const r of ROWS) {
+    if (!r.dossier_date || !r.loi_date) continue;
+    const m = r.loi_date.slice(0, 7);
+    if (!velocityTrendMap[m]) velocityTrendMap[m] = [];
+    const d = daysBetween(r.dossier_date, r.loi_date);
+    if (d != null && d >= 0) velocityTrendMap[m].push(d);
+  }
+  const velMonths = Object.keys(velocityTrendMap).sort();
+  const velocityTrend = velMonths.map(m => ({ month: m, median: median(velocityTrendMap[m]) }));
+
+  return {
+    periodRows, loiRows,
+    totals: { deals_total: ROWS.length, dossiers_period: periodRows.length, lois_period: loiRows.length, active_period: periodRows.filter(r => !CLOSED.has(r.stage)).length },
+    cumulative_dossiers: cumulate(monthlyDossiers),
+    cumulative_lois: cumulate(monthlyLois),
+    monthly_dossiers: Object.keys(monthlyDossiers).sort().map(m => ({ month: m, ...monthlyDossiers[m] })),
+    funnelOverview, sectors: sectorList, allSectors, originators, top_introducers: topIntroducers,
+    reachedAt, stageConv, stageDurations, deathList, lossList,
+    velocity: { loi: avg(dossierToLoi), close: avg(dossierToClose), kill: avg(dossierToKill) },
+    introQuality, coldCount, warmCount, repeatFirms, oneOffFirms, uniqueIntros,
+    top5Firms, introSectorMatrix, poleLoad, poleNames, allPoles, sectorPoleMatrix, sectorTrend, ticketSectorList,
+    stale, preCiMissing, loiMissing, noOwner, recent, dataQuality,
+    quarters, recentQuarters, dossiersByQuarter, loisByQuarter,
+    thisQDossiers, lastQDossiers, ytdAll, priorYTD,
+    origQuarterRows, sectorQuarterRows, topSectorsForMini,
+    wonRows, killedRowsAll,
+    killedInPeriod, killRate, avgKillAge, lastStageList, passReasonsList, topReason,
+    reasonSectorMatrix, reasonStageMatrix, killedList,
+    coverageRatio, avgClosesPerQ, activeLOIPlus,
+    expectedCloses, forecastLow, forecastHigh,
+    hitRate, medianCycle, healthScore, healthBreakdown,
+    benchmarkRows, cohortMonths, cohortCurves, scatterData,
+    loadMatrix, loadRows, load80, drySpell,
+    agingBuckets, hhi, hhiStatus, top3Pct, velocityTrend
+  };
+}
+
+// ========== Brief generator ==========
+function generateBrief(agg) {
+  const insights = [];
+  const now = new Date();
+  const weekAgo = new Date(now); weekAgo.setDate(now.getDate() - 7);
+  const recentDossiers = ROWS.filter(r => r.dossier_date && new Date(r.dossier_date) >= weekAgo).length;
+  if (recentDossiers > 0) {
+    insights.push({ type: 'up', text: `<strong>${recentDossiers} new dossiers</strong> entered the funnel this week.` });
+  } else {
+    insights.push({ type: 'warn', text: `<strong>No new dossiers</strong> this week. Consider activating sources.` });
+  }
+
+  // Top sector QoQ
+  if (agg.sectorQuarterRows.length) {
+    const topSec = agg.sectorQuarterRows[0];
+    const last = topSec.byQ[agg.recentQuarters.slice(-1)[0]] || 0;
+    const prev = topSec.byQ[agg.recentQuarters.slice(-2)[0]] || 0;
+    if (prev > 0 && last !== prev) {
+      const delta = Math.round(((last - prev) / prev) * 100);
+      const dir = delta >= 0 ? 'up' : 'down';
+      insights.push({ type: dir === 'up' ? 'up' : 'down', text: `<strong>${topSec.sector}</strong> is ${dir} ${Math.abs(delta)}% QoQ, now ${last} dossiers.` });
+    }
+  }
+
+  // Stale LOI deals
+  const staleLOI = ROWS.filter(r => LOI_STAGES.has(r.stage) && r.loi_date && daysBetween(r.loi_date, now) > 14);
+  if (staleLOI.length > 0) {
+    const names = staleLOI.slice(0, 2).map(r => r.company).filter(Boolean).join(', ');
+    insights.push({ type: 'warn', text: `<strong>${staleLOI.length} LOI deals</strong> idle 14+ days${names ? ': ' + names : ''}.` });
+  }
+
+  // Top originator by recent wins
+  const topOrig = agg.originators.find(o => o.won > 0);
+  if (topOrig) {
+    insights.push({ type: 'info', text: `Top closer in period: <strong>${topOrig.name}</strong> (${topOrig.won} won, ${topOrig.loi_plus} LOI+).` });
+  }
+
+  // Dry spell alerts
+  const dryAlerts = agg.drySpell.filter(d => d.status === 'alert');
+  if (dryAlerts.length > 0) {
+    insights.push({ type: 'warn', text: `<strong>${dryAlerts.length} pole${dryAlerts.length>1?'s':''} in dry spell</strong>: ${dryAlerts.slice(0,2).map(d => d.pole).join(', ')}.` });
+  }
+
+  // Health score trend
+  if (agg.healthScore < 50) {
+    insights.push({ type: 'warn', text: `Pipeline Health Score is <strong>${agg.healthScore}/100</strong>. Check Insights tab for the breakdown.` });
+  } else if (agg.healthScore >= 75) {
+    insights.push({ type: 'up', text: `Pipeline Health Score is <strong>${agg.healthScore}/100</strong>, running strong.` });
+  }
+
+  // Forecast
+  if (agg.expectedCloses > 0) {
+    insights.push({ type: 'info', text: `Forecast: ~<strong>${agg.expectedCloses.toFixed(1)} deals</strong> expected to close next quarter (range ${agg.forecastLow}-${agg.forecastHigh}).` });
+  }
+
+  // HHI concentration
+  if (agg.hhi > 2500) {
+    insights.push({ type: 'warn', text: `Source concentration HHI is <strong>${agg.hhi}</strong> (fragile). Top-3 firms = ${agg.top3Pct}% of flow.` });
+  }
+
+  return insights.slice(0, 6);
+}
+
+// ========== Smart insights / alerts ==========
+function generateSmartAlerts(agg) {
+  const alerts = [];
+  // Cohort decay
+  if (agg.cohortCurves.length >= 2) {
+    const last = agg.cohortCurves[agg.cohortCurves.length - 1];
+    const prior = agg.cohortCurves[agg.cohortCurves.length - 2];
+    if (last.curve.length && prior.curve.length) {
+      const lastOff = Math.min(last.curve.length - 1, prior.curve.length - 1);
+      const lastPct = last.curve[lastOff]?.pct;
+      const priorPct = prior.curve[lastOff]?.pct;
+      if (lastPct != null && priorPct != null && lastPct < priorPct - 15) {
+        alerts.push({ type: 'bad', title: 'Cohort decay', body: `Cohort ${last.month} at month ${lastOff} is ${lastPct}% alive vs ${prior.month}'s ${priorPct}%. Possible screening issue.` });
+      }
+    }
+  }
+  // Stage bottleneck: any stage's average duration jumped
+  // (simplified: flag stages with >60 day avg)
+  for (const [s, stats] of Object.entries(agg.stageDurations)) {
+    if (stats && stats.avg != null && stats.avg > 60 && stats.n >= 2) {
+      alerts.push({ type: 'warn', title: 'Stage bottleneck', body: `Average ${stats.avg} days at stage <strong>${s}</strong> (n=${stats.n}). Long dwell time.` });
+    }
+  }
+  // Pole starvation
+  for (const d of agg.drySpell) {
+    if (d.status === 'alert') {
+      alerts.push({ type: 'bad', title: 'Pole in dry spell', body: `<strong>${d.pole}</strong> has seen no dossier in ${d.days_since} days (typical: ${d.typical || '—'} days). Activate sourcing.` });
+    }
+  }
+  // Overloaded originator
+  for (const lr of agg.loadRows) {
+    const total = lr.total;
+    if (total >= agg.load80 * 2 && total >= 6) {
+      alerts.push({ type: 'warn', title: 'Overloaded originator', body: `<strong>${lr.name}</strong> has ${total} active deals, well above the team 80th percentile.` });
+    }
+  }
+  // Sector concentration
+  if (agg.sectors.length > 0 && agg.periodRows.length >= 10) {
+    const top = agg.sectors[0];
+    const share = top.count / agg.periodRows.length;
+    if (share > 0.5) {
+      alerts.push({ type: 'warn', title: 'Sector concentration', body: `<strong>${top.sector}</strong> is ${Math.round(share*100)}% of the period's pipeline. Overweight risk.` });
+    }
+  }
+  // Kill rate alert
+  if (agg.killRate > 70) {
+    alerts.push({ type: 'warn', title: 'Elevated kill rate', body: `Kill rate is <strong>${agg.killRate}%</strong>. Normal healthy range is 40-65%.` });
+  }
+  // Data quality drop
+  const ticketDQ = agg.dataQuality.find(d => d.label === 'Ticket size set');
+  if (ticketDQ && ticketDQ.pct < 60) {
+    alerts.push({ type: 'warn', title: 'Data quality', body: `Only <strong>${ticketDQ.pct}%</strong> of open deals have ticket size set. Downstream reporting will be unreliable.` });
+  }
+  // Stale LOI
+  const now = new Date();
+  const staleLOIs = ROWS.filter(r => LOI_STAGES.has(r.stage) && r.loi_date && daysBetween(r.loi_date, now) > 45 && !CLOSED.has(r.stage));
+  if (staleLOIs.length > 0) {
+    alerts.push({ type: 'warn', title: 'Stale LOI', body: `${staleLOIs.length} deal${staleLOIs.length>1?'s':''} in LOI/DD with no movement in 45+ days.` });
+  }
+
+  return alerts;
+}
+
+
+// ========== Heatmap renderer ==========
+function renderHeatmap(elId, headers, rows) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  el.innerHTML = '';
+  el.classList.add('heatmap');
+  const ncols = headers.length;
+  el.style.gridTemplateColumns = `minmax(140px, 1.3fr) repeat(${ncols-1}, minmax(50px, 1fr))`;
+  let max = 0;
+  rows.forEach(r => r.slice(1).forEach(v => { if (typeof v === 'number' && v > max) max = v; }));
+  headers.forEach(h => { const c = document.createElement('div'); c.className = 'cell header-row'; c.textContent = h; el.appendChild(c); });
+  rows.forEach(r => {
+    r.forEach((v, i) => {
+      const c = document.createElement('div');
+      c.className = 'cell ' + (i === 0 ? 'row-label' : '');
+      if (i === 0) { c.textContent = v; }
+      else {
+        c.textContent = v || '';
+        if (typeof v === 'number' && v > 0 && max > 0) {
+          const intensity = v / max;
+          c.style.background = `rgba(106, 169, 255, ${0.1 + intensity * 0.55})`;
+          c.style.color = intensity > 0.5 ? '#08101f' : 'var(--text-0)';
+          c.style.fontWeight = '600';
+        } else { c.style.background = 'var(--bg-2)'; }
+      }
+      el.appendChild(c);
+    });
+  });
+}
+
+// Load heatmap with hotspot flagging
+function renderLoadHeatmap(elId, loadRows, load80) {
+  const stagesOpen = STAGES.filter(s => !CLOSED.has(s));
+  const headers = ['Originator', ...stagesOpen, 'Total'];
+  const el = document.getElementById(elId);
+  if (!el) return;
+  el.innerHTML = '';
+  el.classList.add('heatmap');
+  el.style.gridTemplateColumns = `minmax(140px, 1.5fr) repeat(${stagesOpen.length}, minmax(60px, 1fr)) minmax(50px, 0.8fr)`;
+  headers.forEach(h => { const c = document.createElement('div'); c.className = 'cell header-row'; c.textContent = h; el.appendChild(c); });
+  loadRows.forEach(r => {
+    const nameCell = document.createElement('div'); nameCell.className = 'cell row-label'; nameCell.textContent = r.name; el.appendChild(nameCell);
+    for (const s of stagesOpen) {
+      const v = r.row[s] || 0;
+      const c = document.createElement('div'); c.className = 'cell';
+      c.textContent = v || '';
+      if (v > 0) {
+        const intensity = Math.min(v / 5, 1);
+        if (v >= load80 * 1.5) { c.style.background = 'rgba(255, 126, 126, 0.35)'; c.style.color = '#fff'; c.style.fontWeight = '700'; }
+        else if (v >= load80) { c.style.background = 'rgba(255, 184, 107, 0.25)'; c.style.color = 'var(--warning)'; c.style.fontWeight = '600'; }
+        else { c.style.background = `rgba(106, 169, 255, ${0.1 + intensity * 0.4})`; c.style.color = 'var(--text-0)'; }
+      } else { c.style.background = 'var(--bg-2)'; }
+      el.appendChild(c);
+    }
+    const tc = document.createElement('div'); tc.className = 'cell'; tc.textContent = r.total; tc.style.fontWeight = '700'; tc.style.color = 'var(--text-0)'; el.appendChild(tc);
+  });
+}
+
+// ========== Inline canvas sparkline ==========
+function drawSparkline(canvas, values, color) {
+  if (!canvas || !values || !values.length) return;
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width, h = canvas.height;
+  ctx.clearRect(0, 0, w, h);
+  const max = Math.max(...values), min = Math.min(...values);
+  const range = max - min || 1;
+  const step = w / (values.length - 1 || 1);
+  ctx.beginPath();
+  values.forEach((v, i) => {
+    const x = i * step;
+    const y = h - ((v - min) / range) * (h - 4) - 2;
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  });
+  ctx.strokeStyle = color || palette.accent;
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+  // Fill under
+  ctx.lineTo(w, h); ctx.lineTo(0, h); ctx.closePath();
+  ctx.fillStyle = (color || palette.accent) + '22';
+  ctx.fill();
+}
+
+// ========== Render: MAIN ==========
+function render(agg) {
+  destroyCharts();
+  state.agg = agg;
+
+  renderOverview(agg);
+  renderInsights(agg);
+  renderQuarterly(agg);
+  renderFunnel(agg);
+  renderLoss(agg);
+  renderWatchlist(agg);
+  renderTeam(agg);
+  renderSources(agg);
+  renderSectors(agg);
+  renderAllDeals(agg);
+
+  // Filter result count
+  document.getElementById('filterResultCount').textContent = `${agg.periodRows.length} deals in scope`;
+}
+
+// ========== Overview ==========
+function renderOverview(agg) {
+  // KPIs
+  document.getElementById('kpi-dossiers').textContent = fmtInt(agg.totals.dossiers_period);
+  document.getElementById('kpi-lois').textContent = fmtInt(agg.totals.lois_period);
+  document.getElementById('kpi-active').textContent = fmtInt(agg.totals.active_period);
+  document.getElementById('kpi-total').textContent = fmtInt(agg.totals.deals_total);
+
+  // Cross-cutting hero metrics
+  document.getElementById('kpi-coverage').textContent = agg.coverageRatio + 'x';
+  document.getElementById('kpi-coverage-sub').textContent = `${agg.activeLOIPlus} LOI+ / ~${agg.avgClosesPerQ.toFixed(1)} closes/Q`;
+  document.getElementById('kpi-hit').textContent = fmtPct(agg.hitRate);
+  document.getElementById('kpi-cycle').textContent = fmtDays(agg.medianCycle);
+  document.getElementById('kpi-health').textContent = agg.healthScore;
+  const healthBar = document.getElementById('kpi-health-bar');
+  if (healthBar) {
+    healthBar.style.width = agg.healthScore + '%';
+    const color = agg.healthScore >= 70 ? 'var(--success)' : agg.healthScore >= 50 ? 'var(--warning)' : 'var(--danger)';
+    healthBar.style.background = color;
+  }
+
+  // Morning brief
+  const insights = generateBrief(agg);
+  const briefList = document.getElementById('briefList');
+  briefList.innerHTML = '';
+  if (!insights.length) {
+    briefList.innerHTML = '<div class="empty">Not enough data for a morning brief yet.</div>';
+  } else {
+    insights.forEach(ins => {
+      const div = document.createElement('div');
+      div.className = 'brief-insight';
+      const icon = ins.type === 'up' ? '↑' : ins.type === 'down' ? '↓' : ins.type === 'warn' ? '!' : 'i';
+      div.innerHTML = `<div class="ico ${ins.type}">${icon}</div><div class="text">${ins.text}</div>`;
+      briefList.appendChild(div);
+    });
+  }
+  document.getElementById('briefWhen').textContent = new Date().toLocaleDateString(theme.locale, { weekday: 'long', month: 'short', day: 'numeric' });
+
+  // Sparklines on KPI cards (from monthly dossier counts)
+  const months = Object.keys(agg.cumulative_dossiers.reduce((m, x) => (m[x.month] = 1, m), {})).sort();
+  const sparkValues = agg.cumulative_dossiers.map(x => x.value);
+  drawSparkline(document.getElementById('spark-coverage'), sparkValues.length ? sparkValues : [1], '#6aa9ff');
+  drawSparkline(document.getElementById('spark-hit'), sparkValues.length ? sparkValues : [1], '#f2c879');
+
+  // Charts
+  charts.cumDossiers = new Chart(document.getElementById('chartCumDossiers'), {
+    type: 'line',
+    data: { labels: agg.cumulative_dossiers.map(d => d.month), datasets: [{ data: agg.cumulative_dossiers.map(d => d.value), borderColor: palette.accent, backgroundColor: palette.accent + '22', fill: true, tension: 0.3, pointRadius: 3 }] },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+  });
+  charts.cumLois = new Chart(document.getElementById('chartCumLois'), {
+    type: 'line',
+    data: { labels: agg.cumulative_lois.map(d => d.month), datasets: [{ data: agg.cumulative_lois.map(d => d.value), borderColor: palette.accent2, backgroundColor: palette.accent2 + '22', fill: true, tension: 0.3, pointRadius: 3 }] },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+  });
+  charts.monthly = new Chart(document.getElementById('chartMonthly'), {
+    type: 'bar',
+    data: {
+      labels: agg.monthly_dossiers.map(d => d.month),
+      datasets: [
+        { label: 'Build-up', data: agg.monthly_dossiers.map(d => d.build_up), backgroundColor: palette.accent },
+        { label: 'New platform', data: agg.monthly_dossiers.map(d => d.new_platform), backgroundColor: palette.accent2 }
+      ]
+    },
+    options: { responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true } } }
+  });
+  charts.funnel = new Chart(document.getElementById('chartFunnel'), {
+    type: 'bar',
+    data: { labels: agg.funnelOverview.map(d => d.stage), datasets: [
+      { label: 'Build-up', data: agg.funnelOverview.map(d => d.build_up), backgroundColor: palette.accent },
+      { label: 'New platform', data: agg.funnelOverview.map(d => d.new_platform), backgroundColor: palette.accent2 },
+      { label: 'Unknown', data: agg.funnelOverview.map(d => d.unknown), backgroundColor: '#555f78' }
+    ] },
+    options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true, beginAtZero: true }, y: { stacked: true } } }
+  });
+  charts.sector = new Chart(document.getElementById('chartSector'), {
+    type: 'doughnut',
+    data: { labels: agg.sectors.map(d => d.sector), datasets: [{ data: agg.sectors.map(d => d.count), backgroundColor: palette.sectorPalette }] },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
+  });
+
+  // Originator + Introducer tables
+  const tblO = document.getElementById('tblOriginators'); tblO.innerHTML = '';
+  agg.originators.forEach(o => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${o.name}</td><td class="num">${o.total}</td><td class="num">${o.active}</td><td class="num">${o.loi_plus}</td><td class="num">${o.closed}</td>`;
+    tblO.appendChild(tr);
+  });
+  const tblI = document.getElementById('tblIntroducers'); tblI.innerHTML = '';
+  agg.top_introducers.forEach((r, i) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${i+1}</td><td>${r.firm}</td><td class="num">${r.deals}</td>`;
+    tblI.appendChild(tr);
+  });
+}
+
+// ========== Insights tab ==========
+function renderInsights(agg) {
+  // Health badge
+  const badge = document.getElementById('healthBadge');
+  badge.textContent = `${agg.healthScore}/100`;
+  badge.style.background = agg.healthScore >= 70 ? 'var(--success-soft)' : agg.healthScore >= 50 ? 'var(--warning-soft)' : 'var(--danger-soft)';
+  badge.style.color = agg.healthScore >= 70 ? 'var(--success)' : agg.healthScore >= 50 ? 'var(--warning)' : 'var(--danger)';
+
+  // Health breakdown bar chart
+  charts.healthBreakdown = new Chart(document.getElementById('chartHealthBreakdown'), {
+    type: 'bar',
+    data: {
+      labels: agg.healthBreakdown.map(h => h.label),
+      datasets: [{ data: agg.healthBreakdown.map(h => h.value), backgroundColor: agg.healthBreakdown.map(h => h.value >= 18 ? palette.good : h.value >= 12 ? palette.accent : palette.bad) }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true, max: 25 } } }
+  });
+
+  // Forecast
+  document.getElementById('forecastValue').textContent = agg.expectedCloses.toFixed(1);
+  document.getElementById('forecastRange').innerHTML = `<span style="color: var(--text-2)">confidence range</span> <strong>${agg.forecastLow}–${agg.forecastHigh}</strong> deals`;
+
+  // Benchmark table
+  const bmEl = document.getElementById('benchmarkTable');
+  bmEl.innerHTML = '';
+  const tbl = document.createElement('table');
+  tbl.innerHTML = '<thead><tr><th>Transition</th><th class="num">Your rate</th><th class="num">Healthy</th><th>Status</th></tr></thead><tbody></tbody>';
+  const tbody = tbl.querySelector('tbody');
+  agg.benchmarkRows.forEach(r => {
+    const tr = document.createElement('tr');
+    const bmRange = r.bm ? `${r.bm.healthy[0]}-${r.bm.healthy[1]}%` : '—';
+    tr.innerHTML = `<td>${r.from} → ${r.to}</td><td class="num">${r.conv}%</td><td class="num">${bmRange}</td><td><span class="pill ${r.status}">${r.label}</span></td>`;
+    tbody.appendChild(tr);
+  });
+  bmEl.appendChild(tbl);
+
+  // Cohort curves
+  charts.cohort = new Chart(document.getElementById('chartCohort'), {
+    type: 'line',
+    data: {
+      labels: [0, 1, 2, 3, 4, 5, 6].map(n => `M+${n}`),
+      datasets: agg.cohortCurves.map((c, i) => ({
+        label: c.month,
+        data: [0,1,2,3,4,5,6].map(off => { const pt = c.curve.find(x => x.offset === off); return pt ? pt.pct : null; }),
+        borderColor: palette.sectorPalette[i % palette.sectorPalette.length],
+        backgroundColor: 'transparent',
+        tension: 0.3, pointRadius: 3, spanGaps: true
+      }))
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 10 } } }, scales: { y: { beginAtZero: true, max: 100, ticks: { callback: v => v + '%' } } } }
+  });
+
+  // Source efficiency scatter
+  charts.sourceScatter = new Chart(document.getElementById('chartSourceScatter'), {
+    type: 'bubble',
+    data: {
+      datasets: [{
+        data: agg.scatterData,
+        backgroundColor: agg.scatterData.map(d => d.y >= 40 && d.x >= 2 ? palette.good + 'cc' : d.y >= 40 ? palette.accent + 'cc' : d.x >= 2 ? palette.warn + 'cc' : palette.bad + 'cc'),
+        borderColor: agg.scatterData.map(d => d.y >= 40 && d.x >= 2 ? palette.good : d.y >= 40 ? palette.accent : d.x >= 2 ? palette.warn : palette.bad),
+        borderWidth: 1.5
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => { const d = ctx.raw; return `${d.firm}: ${d.x} deals, ${d.y}% quality, ~€${d.r.toFixed(1)}M avg`; } } }
+      },
+      scales: {
+        x: { beginAtZero: true, title: { display: true, text: 'Deals introduced' } },
+        y: { beginAtZero: true, max: 100, title: { display: true, text: '% past Pre-Screening' }, ticks: { callback: v => v + '%' } }
+      }
+    }
+  });
+
+  // Smart insights
+  const smart = document.getElementById('smartInsights');
+  const alerts = generateSmartAlerts(agg);
+  smart.innerHTML = '';
+  if (!alerts.length) {
+    smart.innerHTML = '<div class="empty">All clear. No alerts triggered this cycle.</div>';
+  } else {
+    alerts.forEach(a => {
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex; gap:12px; padding:12px 14px; background:var(--bg-2); border-left:3px solid ' + (a.type==='bad'?'var(--danger)':a.type==='warn'?'var(--warning)':'var(--accent)') + '; border-radius:6px; margin-bottom:8px;';
+      row.innerHTML = `<div style="flex:1"><div style="font-size:11px; text-transform:uppercase; letter-spacing:0.05em; color: var(--text-2); margin-bottom:3px;">${a.title}</div><div style="font-size:13px; color: var(--text-0);">${a.body}</div></div>`;
+      smart.appendChild(row);
+    });
+  }
+
+  // Load balancing heatmap
+  renderLoadHeatmap('loadHeatmap', agg.loadRows, agg.load80);
+
+  // Dry spell table
+  const drytb = document.getElementById('tblDrySpell');
+  drytb.innerHTML = '';
+  agg.drySpell.forEach(d => {
+    const cls = d.status === 'alert' ? 'bad' : d.status === 'warn' ? 'warn' : 'good';
+    const lbl = d.status === 'alert' ? 'Dry spell' : d.status === 'warn' ? 'Watching' : 'Active';
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${d.pole}</td><td class="num">${d.days_since || '—'}</td><td class="num">${d.typical || '—'}</td><td class="num"><span class="pill ${cls}">${lbl}</span></td>`;
+    drytb.appendChild(tr);
+  });
+
+  // Aging pyramid
+  charts.aging = new Chart(document.getElementById('chartAging'), {
+    type: 'bar',
+    data: {
+      labels: agg.agingBuckets.map(b => b.label + ' d'),
+      datasets: [{ data: agg.agingBuckets.map(b => b.count), backgroundColor: agg.agingBuckets.map(b => b.min >= 91 ? palette.bad : b.min >= 61 ? palette.warn : palette.good) }]
+    },
+    options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true } } }
+  });
+
+  // HHI
+  document.getElementById('hhiValue').textContent = agg.hhi;
+  const hhiStatus = document.getElementById('hhiStatus');
+  hhiStatus.textContent = agg.hhiStatus;
+  hhiStatus.style.color = agg.hhi > 2500 ? 'var(--danger)' : agg.hhi > 1500 ? 'var(--warning)' : 'var(--success)';
+  const top3Bar = document.getElementById('top3Bar');
+  top3Bar.style.width = agg.top3Pct + '%';
+  document.getElementById('top3Val').textContent = agg.top3Pct + '%';
+
+  // Velocity trend
+  charts.velocityTrend = new Chart(document.getElementById('chartVelocityTrend'), {
+    type: 'line',
+    data: {
+      labels: agg.velocityTrend.map(v => v.month),
+      datasets: [{ data: agg.velocityTrend.map(v => v.median), borderColor: palette.accent3, backgroundColor: palette.accent3 + '22', fill: true, tension: 0.3, pointRadius: 3 }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+  });
+}
+
+// ========== Quarterly ==========
+function renderQuarterly(agg) {
+  document.getElementById('kpi-q-this').textContent = agg.thisQDossiers;
+  document.getElementById('kpi-q-last').textContent = agg.lastQDossiers;
+  document.getElementById('kpi-q-ytd').textContent = agg.ytdAll;
+  document.getElementById('kpi-q-pytd').textContent = agg.priorYTD;
+  const qd = qoqDelta(agg.thisQDossiers, agg.lastQDossiers);
+  const qdel = document.getElementById('kpi-q-this-delta');
+  qdel.textContent = qd + ' QoQ';
+  qdel.className = 'delta ' + (qoqClass(agg.thisQDossiers, agg.lastQDossiers) === 'good' ? 'up' : 'down');
+  const yd = qoqDelta(agg.ytdAll, agg.priorYTD);
+  const ydel = document.getElementById('kpi-q-ytd-delta');
+  ydel.textContent = yd + ' YoY';
+  ydel.className = 'delta ' + (qoqClass(agg.ytdAll, agg.priorYTD) === 'good' ? 'up' : 'down');
+
+  charts.qDossiers = new Chart(document.getElementById('chartQDossiers'), {
+    type: 'bar',
+    data: { labels: agg.dossiersByQuarter.map(d => d.q), datasets: [{ data: agg.dossiersByQuarter.map(d => d.count), backgroundColor: palette.accent }] },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+  });
+  charts.qLois = new Chart(document.getElementById('chartQLois'), {
+    type: 'bar',
+    data: { labels: agg.loisByQuarter.map(d => d.q), datasets: [{ data: agg.loisByQuarter.map(d => d.count), backgroundColor: palette.accent2 }] },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+  });
+
+  const tblOQ = document.querySelector('#tblOrigQuarter');
+  tblOQ.querySelector('thead tr').innerHTML = '<th>Originator</th>' + agg.recentQuarters.map(q => `<th class="num">${q}</th>`).join('') + '<th class="num">Total</th>';
+  const oqBody = tblOQ.querySelector('tbody'); oqBody.innerHTML = '';
+  agg.origQuarterRows.forEach(o => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${o.name}</td>` + agg.recentQuarters.map(q => `<td class="num">${o.byQ[q] || 0}</td>`).join('') + `<td class="num"><strong>${o.total}</strong></td>`;
+    oqBody.appendChild(tr);
+  });
+
+  const tblSQ = document.querySelector('#tblSectorQuarter');
+  tblSQ.querySelector('thead tr').innerHTML = '<th>Sector</th>' + agg.recentQuarters.map(q => `<th class="num">${q}</th>`).join('') + '<th class="num">QoQ</th>';
+  const sqBody = tblSQ.querySelector('tbody'); sqBody.innerHTML = '';
+  agg.sectorQuarterRows.forEach(s => {
+    const last = s.byQ[agg.recentQuarters.slice(-1)[0]] || 0;
+    const prev = s.byQ[agg.recentQuarters.slice(-2)[0]] || 0;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${s.sector}</td>` + agg.recentQuarters.map(q => `<td class="num">${s.byQ[q] || 0}</td>`).join('') + `<td class="num"><span class="pill ${qoqClass(last,prev)}">${qoqDelta(last,prev)}</span></td>`;
+    sqBody.appendChild(tr);
+  });
+
+  const sectorMinis = document.getElementById('sectorMinis');
+  sectorMinis.innerHTML = '';
+  agg.topSectorsForMini.forEach((sec, i) => {
+    const row = agg.sectorQuarterRows.find(r => r.sector === sec);
+    if (!row) return;
+    const panel = document.createElement('div');
+    panel.className = 'panel';
+    panel.innerHTML = `<h2>${sec}</h2><div class="chart-wrap short"><canvas id="mini-${i}"></canvas></div>`;
+    sectorMinis.appendChild(panel);
+    charts['mini' + i] = new Chart(panel.querySelector('canvas'), {
+      type: 'bar',
+      data: { labels: agg.recentQuarters, datasets: [{ data: agg.recentQuarters.map(q => row.byQ[q] || 0), backgroundColor: palette.sectorPalette[i % palette.sectorPalette.length] }] },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }
+    });
+  });
+
+  fillTable('tblDaysToWin', agg.wonRows, r => `<td>${r.company}</td><td>${(r.closed||'').slice(0,10)}</td><td class="num">${r.days}</td>`, 'No closed-won deals yet.');
+  fillTable('tblDaysToKill', agg.killedRowsAll, r => `<td>${r.company}</td><td>${(r.killed||'').slice(0,10)}</td><td class="num">${r.days}</td>`, 'No killed deals with stage history.');
+}
+
+function fillTable(id, list, mapper, emptyMsg) {
+  const tb = document.getElementById(id);
+  if (!tb) return;
+  tb.innerHTML = '';
+  if (!list || !list.length) {
+    const tr = document.createElement('tr');
+    const cols = tb.closest('table').querySelector('thead tr').children.length;
+    tr.innerHTML = `<td colspan="${cols}"><div class="empty">${emptyMsg}</div></td>`;
+    tb.appendChild(tr);
+    return;
+  }
+  list.forEach(r => { const tr = document.createElement('tr'); tr.innerHTML = mapper(r); tb.appendChild(tr); });
+}
+
+// ========== Funnel & Velocity ==========
+function renderFunnel(agg) {
+  document.getElementById('kpi-velocity-loi').textContent = fmtDays(agg.velocity.loi);
+  document.getElementById('kpi-velocity-close').textContent = fmtDays(agg.velocity.close);
+  document.getElementById('kpi-velocity-kill').textContent = fmtDays(agg.velocity.kill);
+  charts.convFunnel = new Chart(document.getElementById('chartConvFunnel'), {
+    type: 'bar', data: { labels: STAGES, datasets: [{ data: agg.reachedAt, backgroundColor: palette.accent }] },
+    options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true } } }
+  });
+  const tblConv = document.querySelector('#tblStageConv'); tblConv.innerHTML = '';
+  agg.stageConv.forEach(c => {
+    const cls = c.conv >= 60 ? 'good' : c.conv >= 30 ? 'warn' : 'bad';
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${c.from} → ${c.to}</td><td class="num">${c.reached}</td><td class="num"><span class="pill ${cls}">${c.conv}%</span></td>`;
+    tblConv.appendChild(tr);
+  });
+  const sdLabels = STAGES.slice(0, -1);
+  const sdVals = sdLabels.map(s => agg.stageDurations[s] ? agg.stageDurations[s].avg : null);
+  charts.stageDuration = new Chart(document.getElementById('chartStageDuration'), {
+    type: 'bar', data: { labels: sdLabels, datasets: [{ data: sdVals, backgroundColor: palette.accent3 }] },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+  });
+  charts.deathStage = new Chart(document.getElementById('chartDeathStage'), {
+    type: 'bar', data: { labels: agg.deathList.map(d => d.stage), datasets: [{ data: agg.deathList.map(d => d.count), backgroundColor: palette.bad }] },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+  });
+  const lossEl = document.getElementById('lossReasons');
+  lossEl.innerHTML = '';
+  if (!agg.lossList.length) {
+    lossEl.innerHTML = '<div class="empty">No loss reasons captured.</div>';
+  } else {
+    const max = Math.max(...agg.lossList.map(l => l.count));
+    agg.lossList.forEach(l => {
+      const div = document.createElement('div'); div.className = 'bar-row';
+      div.innerHTML = `<div class="label" title="${l.reason}">${l.reason}</div><div class="bar-bg"><div class="bar-fill" style="width:${(l.count/max)*100}%"></div></div><div class="val">${l.count}</div>`;
+      lossEl.appendChild(div);
+    });
+  }
+}
+
+// ========== Loss ==========
+function renderLoss(agg) {
+  document.getElementById('kpi-killed').textContent = agg.killedInPeriod.length;
+  document.getElementById('kpi-killrate').textContent = agg.killRate + '%';
+  document.getElementById('kpi-avgkillage').textContent = agg.avgKillAge != null ? agg.avgKillAge + ' d' : '—';
+  document.getElementById('kpi-topreason').textContent = agg.topReason;
+  charts.lastStageBeforeKill = new Chart(document.getElementById('chartLastStageBeforeKill'), {
+    type: 'bar', data: { labels: agg.lastStageList.map(s => s.stage), datasets: [{ data: agg.lastStageList.map(s => s.count), backgroundColor: palette.bad }] },
+    options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true } } }
+  });
+  if (agg.passReasonsList.length) {
+    charts.passReasons = new Chart(document.getElementById('chartPassReasons'), {
+      type: 'bar', data: { labels: agg.passReasonsList.map(r => r.reason), datasets: [{ data: agg.passReasonsList.map(r => r.count), backgroundColor: palette.warn }] },
+      options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true } } }
+    });
+  } else {
+    const el = document.getElementById('chartPassReasons').parentElement;
+    el.innerHTML = '<div class="empty">No pass reasons captured.</div>';
+  }
+  if (agg.passReasonsList.length && agg.allSectors.length) {
+    renderHeatmap('heatmapReasonSector', ['Reason', ...agg.allSectors], agg.reasonSectorMatrix.map(r => [r.reason, ...agg.allSectors.map(s => r[s])]));
+  } else {
+    document.getElementById('heatmapReasonSector').innerHTML = '<div class="empty">Not enough data.</div>';
+  }
+  const stagesNoKill = STAGES.filter(s => s !== KILL_STAGE);
+  if (agg.passReasonsList.length) {
+    renderHeatmap('heatmapReasonStage', ['Reason', ...stagesNoKill], agg.reasonStageMatrix.map(r => [r.reason, ...stagesNoKill.map(s => r[s])]));
+  } else {
+    document.getElementById('heatmapReasonStage').innerHTML = '<div class="empty">No data.</div>';
+  }
+  fillTable('tblKilled', agg.killedList, r => `<td>${r.company}</td><td>${r.sector}</td><td>${r.pole}</td><td>${r.originator}</td><td>${r.reasons}</td><td class="num">${r.days_alive != null ? r.days_alive : '—'}</td>`, 'No killed deals in period.');
+}
+
+// ========== Watchlist ==========
+function renderWatchlist(agg) {
+  document.getElementById('kpi-stale').textContent = agg.stale.length;
+  document.getElementById('kpi-loimissing').textContent = agg.loiMissing.length;
+  document.getElementById('kpi-preci').textContent = agg.preCiMissing.length;
+  document.getElementById('kpi-noowner').textContent = agg.noOwner.length;
+  fillTable('tblStale', agg.stale, r => `<td>${r.company||'—'}</td><td>${r.stage||'—'}</td><td>${r.pole||'—'}</td><td>${(r.originators||[]).join(', ')||'—'}</td><td class="num">${r.days_open}</td>`, 'Pipeline is moving.');
+  fillTable('tblPreCI', agg.preCiMissing, r => `<td>${r.company||'—'}</td><td>${r.stage}</td><td>${(r.originators||[]).join(', ')||'—'}</td>`, 'All Pre-CI deals have tickets.');
+  fillTable('tblLoiMissing', agg.loiMissing, r => `<td>${r.company||'—'}</td><td>${r.stage}</td><td>${(r.originators||[]).join(', ')||'—'}</td>`, 'All LOI+ deals have tickets.');
+  fillTable('tblRecent', agg.recent, r => `<td>${r.company||'—'}</td><td>${r.stage||'—'}</td><td>${r.pole||'—'}</td><td>${r.sector||'—'}</td><td>${(r.originators||[]).join(', ')||'—'}</td><td>${(r.dossier_date||'').slice(0,10)}</td>`, 'No new dossiers in last 7 days.');
+  const dq = document.getElementById('dataQuality'); dq.innerHTML = '';
+  agg.dataQuality.forEach(d => {
+    const cls = d.pct >= 90 ? 'success' : d.pct >= 70 ? 'warning' : 'danger';
+    const div = document.createElement('div'); div.className = 'bar-row';
+    div.innerHTML = `<div class="label">${d.label}</div><div class="bar-bg"><div class="bar-fill" style="width:${d.pct}%; background: var(--${cls})"></div></div><div class="val">${d.pct}%</div>`;
+    dq.appendChild(div);
+  });
+}
+
+// ========== Team ==========
+function renderTeam(agg) {
+  const tblScore = document.querySelector('#tblOrigScorecard tbody'); tblScore.innerHTML = '';
+  agg.originators.forEach(o => {
+    const winCls = o.win_rate >= 30 ? 'good' : o.win_rate >= 15 ? 'warn' : 'neutral';
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${o.name}</td><td class="num">${o.total}</td><td class="num">${o.active}</td><td class="num">${o.loi_plus}</td><td class="num">${o.won}</td><td class="num">${o.killed}</td><td class="num"><span class="pill ${winCls}">${o.win_rate}%</span></td><td class="num">${o.avg_days_loi != null ? o.avg_days_loi : '—'}</td><td class="num">${(o.ticketSum/1000000).toFixed(1)}</td>`;
+    tblScore.appendChild(tr);
+  });
+  charts.workload = new Chart(document.getElementById('chartWorkload'), {
+    type: 'bar', data: { labels: agg.originators.map(o => o.name), datasets: [{ data: agg.originators.map(o => o.active), backgroundColor: palette.accent }] },
+    options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true } } }
+  });
+  const now = new Date();
+  const tblLA = document.getElementById('tblLastActivity'); tblLA.innerHTML = '';
+  agg.originators.forEach(o => {
+    const days = o.lastDossier ? daysBetween(o.lastDossier, now) : null;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${o.name}</td><td>${o.lastDossier ? o.lastDossier.slice(0,10) : '—'}</td><td class="num">${days != null ? days : '—'}</td>`;
+    tblLA.appendChild(tr);
+  });
+  renderHeatmap('heatmapOrigSector', ['Originator', ...agg.allSectors],
+    agg.originators.filter(o => o.total > 0).map(o => {
+      const row = [o.name];
+      for (const s of agg.allSectors) {
+        let cnt = 0;
+        for (const r of agg.periodRows) if (r.sector === s && r.originators.includes(o.name)) cnt += 1;
+        row.push(cnt);
+      }
+      return row;
+    })
+  );
+}
+
+// ========== Sources ==========
+function renderSources(agg) {
+  document.getElementById('kpi-uniqintro').textContent = agg.uniqueIntros;
+  document.getElementById('kpi-cold').textContent = agg.coldCount;
+  document.getElementById('kpi-repeat').textContent = agg.repeatFirms;
+  const tblIQ = document.querySelector('#tblIntroQuality tbody'); tblIQ.innerHTML = '';
+  agg.introQuality.forEach((f, i) => {
+    const cls = f.quality >= 60 ? 'good' : f.quality >= 30 ? 'warn' : 'bad';
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${i+1}</td><td>${f.firm}</td><td class="num">${f.deals}</td><td class="num">${f.past_pre}</td><td class="num"><span class="pill ${cls}">${f.quality}%</span></td><td class="num">${f.loi_plus}</td><td class="num">${f.won}</td>`;
+    tblIQ.appendChild(tr);
+  });
+  charts.coldWarm = new Chart(document.getElementById('chartColdWarm'), {
+    type: 'doughnut', data: { labels: ['Warm', 'Cold'], datasets: [{ data: [agg.warmCount, agg.coldCount], backgroundColor: [palette.accent, palette.warn] }] },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+  });
+  charts.repeat = new Chart(document.getElementById('chartRepeat'), {
+    type: 'doughnut', data: { labels: ['Repeat firms', 'One-off firms'], datasets: [{ data: [agg.repeatFirms, agg.oneOffFirms], backgroundColor: [palette.good, palette.tick] }] },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+  });
+  if (agg.top5Firms.length) {
+    renderHeatmap('heatmapIntroSector', ['Firm', ...agg.allSectors], agg.introSectorMatrix.map(r => [r.firm, ...agg.allSectors.map(s => r[s])]));
+  } else {
+    document.getElementById('heatmapIntroSector').innerHTML = '<div class="empty">No introducer data.</div>';
+  }
+}
+
+// ========== Sectors ==========
+function renderSectors(agg) {
+  const stagesForLoad = STAGES.filter(s => !CLOSED.has(s));
+  charts.poleLoad = new Chart(document.getElementById('chartPoleLoad'), {
+    type: 'bar',
+    data: { labels: agg.poleNames, datasets: stagesForLoad.map((s, i) => ({ label: s, data: agg.poleNames.map(p => (agg.poleLoad[p]||{})[s] || 0), backgroundColor: palette.sectorPalette[i % palette.sectorPalette.length] })) },
+    options: { responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true } }, plugins: { legend: { position: 'bottom' } } }
+  });
+  if (agg.allSectors.length && agg.allPoles.length) {
+    renderHeatmap('heatmapSectorPole', ['Sector', ...agg.allPoles], agg.sectorPoleMatrix.map(r => [r.sector, ...agg.allPoles.map(p => r[p])]));
+  } else {
+    document.getElementById('heatmapSectorPole').innerHTML = '<div class="empty">Not enough data.</div>';
+  }
+  charts.sectorTrend = new Chart(document.getElementById('chartSectorTrend'), {
+    type: 'line',
+    data: { labels: agg.sectorTrend.months, datasets: agg.sectorTrend.sectors.map((s, i) => ({ label: s, data: agg.sectorTrend.series[i], borderColor: palette.sectorPalette[i % palette.sectorPalette.length], backgroundColor: palette.sectorPalette[i % palette.sectorPalette.length] + '20', tension: 0.25, pointRadius: 2 })) },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } }, scales: { y: { beginAtZero: true } } }
+  });
+  charts.ticketSector = new Chart(document.getElementById('chartTicketSector'), {
+    type: 'bar', data: { labels: agg.ticketSectorList.map(t => t.sector), datasets: [{ data: agg.ticketSectorList.map(t => t.avg_m.toFixed(1)), backgroundColor: palette.accent3 }] },
+    options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true } } }
+  });
+}
+
+// ========== All Deals ==========
+let allDealsState = { rows: [], sortKey: 'dossier_date', sortDir: -1, search: '' };
+function renderAllDeals(agg) {
+  const now = new Date();
+  allDealsState.rows = agg.periodRows.map(r => ({ ...r, originator: (r.originators||[]).join(', '), days: r.dossier_date ? daysBetween(r.dossier_date, now) : null }));
+  drawAllDeals();
+}
+function drawAllDeals() {
+  const tb = document.querySelector('#tblAllDeals tbody'); if (!tb) return;
+  tb.innerHTML = '';
+  const q = allDealsState.search.toLowerCase();
+  let list = allDealsState.rows;
+  if (q) list = list.filter(r => [r.company, r.stage, r.pole, r.sector, r.originator, r.introducer].some(v => (v||'').toLowerCase().includes(q)));
+  list = list.slice().sort((a,b) => {
+    const av = a[allDealsState.sortKey], bv = b[allDealsState.sortKey];
+    if (av == null && bv == null) return 0;
+    if (av == null) return 1;
+    if (bv == null) return -1;
+    if (av < bv) return -1 * allDealsState.sortDir;
+    if (av > bv) return 1 * allDealsState.sortDir;
+    return 0;
+  });
+  list.forEach(r => {
+    const tr = document.createElement('tr');
+    tr.className = 'clickable';
+    tr.dataset.company = r.company || '';
+    tr.innerHTML = `<td>${r.company||'—'}</td><td>${r.stage||'—'}</td><td>${r.pole||'—'}</td><td>${r.sector||'—'}</td><td>${r.originator||'—'}</td><td>${r.introducer||'—'}</td><td>${(r.dossier_date||'').slice(0,10)}</td><td class="num">${r.days != null ? r.days : '—'}</td><td class="num">${r.ticket ? (r.ticket/1000000).toFixed(1) : '—'}</td>`;
+    tr.addEventListener('click', () => openDealDrawer(r));
+    tb.appendChild(tr);
+  });
+}
+
+// ========== Deal drawer ==========
+function openDealDrawer(row) {
+  const content = document.getElementById('drawerContent');
+  content.innerHTML = `
+    <h3>${row.company || '—'}</h3>
+    <div class="meta">${row.sector || '—'} · ${row.pole || '—'}</div>
+    <div class="field"><div class="k">Stage</div><div class="v">${row.stage || '—'}</div></div>
+    <div class="field"><div class="k">Originator</div><div class="v">${(row.originators||[]).join(', ') || '—'}</div></div>
+    <div class="field"><div class="k">Introducer</div><div class="v">${row.introducer || '—'}</div></div>
+    <div class="field"><div class="k">Ticket</div><div class="v">${row.ticket ? '€' + (row.ticket/1000000).toFixed(1) + 'M' : '—'}</div></div>
+    <div class="field"><div class="k">Added</div><div class="v">${(row.dossier_date||'').slice(0,10)}</div></div>
+    <div class="field"><div class="k">Days open</div><div class="v">${row.days != null ? row.days + ' days' : '—'}</div></div>
+    ${row.passed_reasons && row.passed_reasons.length ? `<div class="field"><div class="k">Loss reasons</div><div class="v">${row.passed_reasons.join(', ')}</div></div>` : ''}
+  `;
+  document.getElementById('drawerOverlay').classList.add('open');
+  document.getElementById('drawer').classList.add('open');
+}
+function closeDrawer() {
+  document.getElementById('drawerOverlay').classList.remove('open');
+  document.getElementById('drawer').classList.remove('open');
+}
+document.getElementById('drawerClose').addEventListener('click', closeDrawer);
+document.getElementById('drawerOverlay').addEventListener('click', closeDrawer);
+
+// ========== Filter UI ==========
+function uniqueValues(fn) { return Array.from(new Set(ROWS.map(fn).filter(Boolean))).sort(); }
+function buildFilterMenu(menuId, items, filterKey) {
+  const menu = document.getElementById(menuId);
+  menu.innerHTML = '';
+  items.forEach(item => {
+    const opt = document.createElement('div');
+    opt.className = 'option';
+    const id = filterKey + '-' + item.replace(/\W/g, '');
+    opt.innerHTML = `<input type="checkbox" id="${id}" /><label for="${id}" style="cursor:pointer;flex:1">${item}</label>`;
+    const cb = opt.querySelector('input');
+    cb.addEventListener('change', () => {
+      if (cb.checked) state.filters[filterKey].add(item);
+      else state.filters[filterKey].delete(item);
+      updateFilterChips();
+      applyFilters();
+      render(aggregate(state.filtered));
+    });
+    opt.addEventListener('click', (e) => { if (e.target !== cb && e.target.tagName !== 'LABEL') cb.click(); });
+    menu.appendChild(opt);
+  });
+}
+function updateFilterChips() {
+  const map = { sectors: 'chipSector', poles: 'chipPole', originators: 'chipOriginator', stages: 'chipStage' };
+  const labels = { sectors: 'Sector', poles: 'Pole', originators: 'Originator', stages: 'Stage' };
+  for (const [k, id] of Object.entries(map)) {
+    const count = state.filters[k].size;
+    const chip = document.getElementById(id);
+    if (count === 0) { chip.innerHTML = labels[k]; chip.classList.remove('active'); }
+    else { chip.innerHTML = `${labels[k]} <span class="count">${count}</span>`; chip.classList.add('active'); }
+  }
+}
+function setDatePreset(preset) {
+  const now = new Date();
+  const f = state.filters;
+  if (preset === 'ytd') { f.dateStart = new Date(data.year, 0, 1); f.dateEnd = now; f.datePreset = 'ytd'; document.getElementById('chipDateLabel').textContent = `YTD ${data.year}`; }
+  else if (preset === 'qtr') { const q = Math.floor(now.getMonth()/3); f.dateStart = new Date(now.getFullYear(), q*3, 1); f.dateEnd = now; f.datePreset = 'qtr'; document.getElementById('chipDateLabel').textContent = `This quarter`; }
+  else if (preset === 'last12') { const d = new Date(now); d.setFullYear(d.getFullYear()-1); f.dateStart = d; f.dateEnd = now; f.datePreset = 'last12'; document.getElementById('chipDateLabel').textContent = `Last 12 months`; }
+  else if (preset === 'all') { f.dateStart = new Date(2000, 0, 1); f.dateEnd = now; f.datePreset = 'all'; document.getElementById('chipDateLabel').textContent = `All time`; }
+  document.getElementById('periodLabel').textContent = `${fmtDate(f.dateStart)} → ${fmtDate(f.dateEnd)}`;
+  applyFilters();
+  render(aggregate(state.filtered));
+}
+document.querySelectorAll('#dd-date .option[data-preset]').forEach(opt => {
+  opt.addEventListener('click', () => { setDatePreset(opt.dataset.preset); document.getElementById('dd-date').classList.remove('open'); });
+});
+document.getElementById('dfApply').addEventListener('click', () => {
+  const s = document.getElementById('dfStart').value;
+  const e = document.getElementById('dfEnd').value;
+  if (!s || !e) return;
+  state.filters.dateStart = new Date(s);
+  state.filters.dateEnd = new Date(e);
+  document.getElementById('chipDateLabel').textContent = `${s} → ${e}`;
+  document.getElementById('periodLabel').textContent = `${s} → ${e}`;
+  document.getElementById('dd-date').classList.remove('open');
+  applyFilters();
+  render(aggregate(state.filtered));
+});
+document.getElementById('chipReset').addEventListener('click', () => {
+  state.filters.sectors.clear(); state.filters.poles.clear(); state.filters.originators.clear(); state.filters.stages.clear();
+  document.querySelectorAll('.dropdown-menu input[type="checkbox"]').forEach(cb => cb.checked = false);
+  setDatePreset('ytd');
+  updateFilterChips();
+});
+// Dropdown toggle
+document.querySelectorAll('.dropdown').forEach(dd => {
+  const chip = dd.querySelector('.chip');
+  if (!chip) return;
+  chip.addEventListener('click', (e) => {
+    e.stopPropagation();
+    document.querySelectorAll('.dropdown').forEach(d => { if (d !== dd) d.classList.remove('open'); });
+    dd.classList.toggle('open');
+  });
+});
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.dropdown')) document.querySelectorAll('.dropdown').forEach(d => d.classList.remove('open'));
+});
+
+// ========== Tab navigation ==========
+function switchTab(tabName) {
+  state.currentTab = tabName;
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.tab === tabName));
+  document.querySelectorAll('.tab-content').forEach(s => s.classList.toggle('active', s.dataset.tab === tabName));
+  const titleMap = {
+    overview: 'Overview', insights: 'Insights & Forecast', quarterly: 'Quarterly',
+    funnel: 'Funnel & Velocity', loss: 'Loss Analysis', watchlist: 'Watchlist',
+    team: 'Team', sources: 'Sources', sectors: 'Sectors & Poles', alldeals: 'All Deals'
+  };
+  document.getElementById('topbar-title').textContent = titleMap[tabName] || '';
+  setTimeout(() => Object.values(charts).forEach(c => c && c.resize && c.resize()), 60);
+}
+document.querySelectorAll('.nav-item').forEach(item => item.addEventListener('click', () => switchTab(item.dataset.tab)));
+
+// ========== Command palette ==========
+const paletteItems = () => {
+  const items = [];
+  const tabs = [
+    ['overview', 'Overview', 'tab'],
+    ['insights', 'Insights & Forecast', 'tab'],
+    ['quarterly', 'Quarterly', 'tab'],
+    ['funnel', 'Funnel & Velocity', 'tab'],
+    ['loss', 'Loss Analysis', 'tab'],
+    ['watchlist', 'Watchlist', 'tab'],
+    ['team', 'Team', 'tab'],
+    ['sources', 'Sources', 'tab'],
+    ['sectors', 'Sectors & Poles', 'tab'],
+    ['alldeals', 'All Deals', 'tab'],
+  ];
+  tabs.forEach(([id, label]) => items.push({ kind: 'tab', label: 'Go to ' + label, action: () => switchTab(id) }));
+  items.push({ kind: 'action', label: 'Download PDF report', action: () => document.getElementById('pdfBtn').click() });
+  items.push({ kind: 'action', label: 'Reset all filters', action: () => document.getElementById('chipReset').click() });
+  items.push({ kind: 'action', label: 'Preset: YTD', action: () => setDatePreset('ytd') });
+  items.push({ kind: 'action', label: 'Preset: This quarter', action: () => setDatePreset('qtr') });
+  items.push({ kind: 'action', label: 'Preset: Last 12 months', action: () => setDatePreset('last12') });
+  items.push({ kind: 'action', label: 'Preset: All time', action: () => setDatePreset('all') });
+
+  const seenCompanies = new Set();
+  ROWS.forEach(r => {
+    if (r.company && !seenCompanies.has(r.company)) {
+      seenCompanies.add(r.company);
+      items.push({ kind: 'deal', label: r.company, action: () => { switchTab('alldeals'); openDealDrawer({ ...r, originators: r.originators || [], days: r.dossier_date ? daysBetween(r.dossier_date, new Date()) : null }); } });
+    }
+  });
+  const origs = uniqueValues(r => (r.originators || [])[0]);
+  origs.forEach(nm => items.push({ kind: 'filter', label: 'Filter: originator = ' + nm, action: () => { state.filters.originators.clear(); state.filters.originators.add(nm); const cb = document.querySelector(`#ddOriginatorMenu input[id="originators-${nm.replace(/\W/g,'')}"]`); if (cb) cb.checked = true; updateFilterChips(); applyFilters(); render(aggregate(state.filtered)); } }));
+  const secs = uniqueValues(r => r.sector);
+  secs.forEach(s => items.push({ kind: 'filter', label: 'Filter: sector = ' + s, action: () => { state.filters.sectors.clear(); state.filters.sectors.add(s); const cb = document.querySelector(`#ddSectorMenu input[id="sectors-${s.replace(/\W/g,'')}"]`); if (cb) cb.checked = true; updateFilterChips(); applyFilters(); render(aggregate(state.filtered)); } }));
+  return items;
+};
+let palItems = [];
+let palFocused = 0;
+function openPalette() {
+  palItems = paletteItems();
+  document.getElementById('paletteOverlay').classList.add('open');
+  document.getElementById('paletteInput').value = '';
+  document.getElementById('paletteInput').focus();
+  palFocused = 0;
+  renderPalette('');
+}
+function closePalette() { document.getElementById('paletteOverlay').classList.remove('open'); }
+function renderPalette(q) {
+  const list = document.getElementById('paletteList');
+  list.innerHTML = '';
+  const ql = q.toLowerCase();
+  let filtered = palItems;
+  if (ql) filtered = palItems.filter(it => it.label.toLowerCase().includes(ql));
+  filtered = filtered.slice(0, 40);
+  if (palFocused >= filtered.length) palFocused = 0;
+  let currentKind = null;
+  filtered.forEach((it, i) => {
+    if (it.kind !== currentKind) {
+      const gl = document.createElement('div'); gl.className = 'palette-group-label'; gl.textContent = it.kind; list.appendChild(gl);
+      currentKind = it.kind;
+    }
+    const row = document.createElement('div');
+    row.className = 'palette-item' + (i === palFocused ? ' focused' : '');
+    row.innerHTML = `<span>${it.label}</span><span class="kind">${it.kind}</span>`;
+    row.addEventListener('click', () => { it.action(); closePalette(); });
+    list.appendChild(row);
+  });
+  if (!filtered.length) list.innerHTML = '<div class="empty">No matches</div>';
+}
+document.getElementById('paletteInput').addEventListener('input', e => renderPalette(e.target.value));
+document.getElementById('paletteInput').addEventListener('keydown', e => {
+  const ql = document.getElementById('paletteInput').value.toLowerCase();
+  const filtered = (ql ? palItems.filter(it => it.label.toLowerCase().includes(ql)) : palItems).slice(0, 40);
+  if (e.key === 'ArrowDown') { e.preventDefault(); palFocused = Math.min(palFocused + 1, filtered.length - 1); renderPalette(document.getElementById('paletteInput').value); }
+  else if (e.key === 'ArrowUp') { e.preventDefault(); palFocused = Math.max(palFocused - 1, 0); renderPalette(document.getElementById('paletteInput').value); }
+  else if (e.key === 'Enter') { const it = filtered[palFocused]; if (it) { it.action(); closePalette(); } }
+  else if (e.key === 'Escape') closePalette();
+});
+document.getElementById('paletteOverlay').addEventListener('click', e => { if (e.target.id === 'paletteOverlay') closePalette(); });
+document.addEventListener('keydown', e => {
+  if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); openPalette(); }
+});
+
+// ========== All Deals search/sort ==========
+document.getElementById('dealSearch').addEventListener('input', e => { allDealsState.search = e.target.value; drawAllDeals(); });
+document.querySelectorAll('#tblAllDeals th[data-sort]').forEach(th => {
+  th.addEventListener('click', () => {
+    const k = th.dataset.sort;
+    if (allDealsState.sortKey === k) allDealsState.sortDir *= -1;
+    else { allDealsState.sortKey = k; allDealsState.sortDir = 1; }
+    drawAllDeals();
+  });
+});
+
+// ========== Initial load ==========
+function initFilters() {
+  buildFilterMenu('ddSectorMenu', uniqueValues(r => r.sector), 'sectors');
+  buildFilterMenu('ddPoleMenu', uniqueValues(r => r.pole), 'poles');
+  const origSet = new Set();
+  ROWS.forEach(r => (r.originators || []).forEach(o => origSet.add(o)));
+  buildFilterMenu('ddOriginatorMenu', Array.from(origSet).sort(), 'originators');
+  buildFilterMenu('ddStageMenu', STAGES, 'stages');
+}
+initFilters();
+setDatePreset('all');
+document.getElementById('generated') && (document.getElementById('generated').textContent = 'Generated ' + new Date(data.generated_at).toLocaleString());
+
+
+// ========== PDF Report Builder ==========
+function hexToRgb(hex) {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return [r, g, b];
+}
+
+// Light theme palette for PDF
+const LIGHT = {
+  text: '#0e1322',
+  textMuted: '#5b6478',
+  textSoft: '#8a93a6',
+  bg: '#ffffff',
+  panel: '#f6f7fb',
+  border: '#e3e7f1',
+  accent: '#1843C9',
+  accent2: '#f0a53c',
+  accent3: '#7a5cf0',
+  good: '#22c55e',
+  bad: '#ef4444',
+  warn: '#f59e0b',
+  palette: ['#1843C9', '#7a5cf0', '#22c55e', '#f59e0b', '#ef4444', '#06b6d4', '#f0a53c', '#64748b']
+};
+
+async function renderChartOffscreen(config, width, height) {
+  // Clone config and swap to light theme
+  const cfg = JSON.parse(JSON.stringify(config));
+  if (cfg.data && cfg.data.datasets) {
+    cfg.data.datasets.forEach((ds, i) => {
+      const color = LIGHT.palette[i % LIGHT.palette.length];
+      if (ds.borderColor && typeof ds.borderColor === 'string') ds.borderColor = color;
+      if (ds.backgroundColor && typeof ds.backgroundColor === 'string') {
+        ds.backgroundColor = ds.backgroundColor.includes('rgba') || ds.backgroundColor.length === 9 ? color + '33' : color;
+      }
+      if (Array.isArray(ds.backgroundColor)) {
+        ds.backgroundColor = ds.backgroundColor.map((_, j) => LIGHT.palette[j % LIGHT.palette.length]);
+      }
+    });
+  }
+  cfg.options = cfg.options || {};
+  cfg.options.animation = false;
+  cfg.options.responsive = false;
+  cfg.options.devicePixelRatio = 2;
+  cfg.options.plugins = cfg.options.plugins || {};
+  // Override Chart.js defaults during this render
+  const prevColor = Chart.defaults.color;
+  const prevBorder = Chart.defaults.borderColor;
+  Chart.defaults.color = LIGHT.text;
+  Chart.defaults.borderColor = LIGHT.border;
+
+  const stage = document.getElementById('print-stage');
+  const container = document.createElement('div');
+  container.style.cssText = `width: ${width}px; height: ${height}px; background: ${LIGHT.bg};`;
+  const canvas = document.createElement('canvas');
+  canvas.width = width * 2;
+  canvas.height = height * 2;
+  canvas.style.width = width + 'px';
+  canvas.style.height = height + 'px';
+  container.appendChild(canvas);
+  stage.appendChild(container);
+
+  const chart = new Chart(canvas, cfg);
+  await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+  const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+  chart.destroy();
+  stage.removeChild(container);
+  Chart.defaults.color = prevColor;
+  Chart.defaults.borderColor = prevBorder;
+  return dataUrl;
+}
+
+function loadImageAsDataURL(url) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      const c = document.createElement('canvas');
+      c.width = img.width; c.height = img.height;
+      c.getContext('2d').drawImage(img, 0, 0);
+      resolve(c.toDataURL('image/png'));
+    };
+    img.onerror = reject;
+    img.src = url;
+  });
+}
+
+function generateNarrative(agg) {
+  const paras = [];
+  // Volume sentence
+  paras.push(`For the period covered, EVOLEM Plateforme received ${agg.totals.dossiers_period} new dossiers, sent ${agg.totals.lois_period} LOIs, and currently has ${agg.totals.active_period} active deals in the pipeline out of ${agg.totals.deals_total} tracked overall.`);
+
+  // Quarterly trend
+  if (agg.thisQDossiers != null && agg.lastQDossiers != null) {
+    const d = agg.thisQDossiers - agg.lastQDossiers;
+    const dir = d > 0 ? 'up' : d < 0 ? 'down' : 'flat';
+    paras.push(`Quarter-over-quarter dossier intake is ${dir} ${Math.abs(d)} deals (${qoqDelta(agg.thisQDossiers, agg.lastQDossiers)}), and year-to-date stands at ${agg.ytdAll} vs ${agg.priorYTD} the prior year (${qoqDelta(agg.ytdAll, agg.priorYTD)}).`);
+  }
+
+  // Sector mix
+  if (agg.sectors.length) {
+    const top = agg.sectors[0];
+    const pct = Math.round((top.count / Math.max(1, agg.periodRows.length)) * 100);
+    paras.push(`Sector concentration is led by ${top.sector} at ${pct}% of the current pipeline, followed by ${agg.sectors.slice(1, 3).map(s => s.sector).join(' and ')}.`);
+  }
+
+  // Health & forecast
+  paras.push(`The composite Pipeline Health Score is ${agg.healthScore}/100 (coverage ${Math.round(agg.healthBreakdown[0].value)}/25, velocity ${Math.round(agg.healthBreakdown[1].value)}/25, kill discipline ${Math.round(agg.healthBreakdown[2].value)}/25, data quality ${Math.round(agg.healthBreakdown[3].value)}/25). Probability-weighted forecasting suggests ~${agg.expectedCloses.toFixed(1)} deals expected to close next quarter, within a ${agg.forecastLow}–${agg.forecastHigh} confidence range.`);
+
+  // Sources
+  if (agg.uniqueIntros > 0) {
+    paras.push(`Sourcing came through ${agg.uniqueIntros} unique introducer firms, with ${agg.repeatFirms} repeat partners and ${agg.coldCount} cold / direct deals. Source concentration HHI stands at ${agg.hhi} (${agg.hhiStatus.toLowerCase()}); the top-3 firms account for ${agg.top3Pct}% of introduced flow.`);
+  }
+
+  // Loss
+  if (agg.killedInPeriod.length > 0) {
+    paras.push(`Of the deals in period, ${agg.killedInPeriod.length} were killed (kill rate ${agg.killRate}%), with an average lifespan of ${agg.avgKillAge || '—'} days before being closed out. The most common loss reason is "${agg.topReason}".`);
+  }
+
+  return paras;
+}
+
+async function buildPDF() {
+  const modal = document.getElementById('pdfModal');
+  const progress = document.getElementById('pdfProgress');
+  const status = document.getElementById('pdfStatus');
+  modal.classList.add('open');
+  progress.style.width = '2%';
+  status.textContent = 'Loading assets…';
+
+  try {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
+    const W = doc.internal.pageSize.getWidth();
+    const H = doc.internal.pageSize.getHeight();
+    const margin = 14;
+    const contentW = W - margin * 2;
+
+    // Pre-load logo
+    let logoData = null;
+    try { logoData = await loadImageAsDataURL(theme.logoUrl); } catch (e) {}
+    progress.style.width = '8%';
+    status.textContent = 'Building cover page…';
+
+    const agg = state.agg;
+    const toc = [];
+    const brand = theme;
+    const periodLabel = document.getElementById('periodLabel').textContent;
+    const genDate = new Date().toLocaleDateString(brand.locale, { year: 'numeric', month: 'long', day: 'numeric' });
+
+    // ---------- COVER ----------
+    const [ar, ag, ab] = hexToRgb(LIGHT.accent);
+    doc.setFillColor(LIGHT.bg);
+    doc.rect(0, 0, W, H, 'F');
+    // Top accent band
+    doc.setFillColor(ar, ag, ab);
+    doc.rect(0, 0, W, 54, 'F');
+    if (logoData) {
+      try { doc.addImage(logoData, 'PNG', margin, 14, 20, 20); } catch(e) {}
+    }
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10);
+    doc.setTextColor(255, 255, 255);
+    doc.text(brand.builtBy.toUpperCase() + ' × ' + brand.customerName.toUpperCase(), margin + 26, 22);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    doc.text('Advanced Reports Platform', margin + 26, 28);
+
+    // Main title
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(34);
+    doc.setTextColor(...hexToRgb(LIGHT.text));
+    doc.text('Pipeline Report', margin, 95);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(16);
+    doc.setTextColor(...hexToRgb(LIGHT.textMuted));
+    doc.text(brand.customerName, margin, 107);
+
+    // Period
+    doc.setFontSize(12);
+    doc.setTextColor(...hexToRgb(LIGHT.text));
+    doc.text('Period', margin, 135);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(14);
+    doc.text(periodLabel || 'Year-to-date', margin, 143);
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(12);
+    doc.setTextColor(...hexToRgb(LIGHT.text));
+    doc.text('Generated', margin, 158);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(14);
+    doc.text(genDate, margin, 166);
+
+    // KPI summary grid on cover
+    const kpis = [
+      { label: 'Dossiers received', value: agg.totals.dossiers_period },
+      { label: 'LOIs sent', value: agg.totals.lois_period },
+      { label: 'Active deals', value: agg.totals.active_period },
+      { label: 'Pipeline health', value: agg.healthScore + '/100' },
+    ];
+    const kpiY = 190;
+    const kpiW = (contentW - 9) / 4;
+    kpis.forEach((k, i) => {
+      const x = margin + i * (kpiW + 3);
+      doc.setFillColor(...hexToRgb(LIGHT.panel));
+      doc.roundedRect(x, kpiY, kpiW, 28, 2, 2, 'F');
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8);
+      doc.setTextColor(...hexToRgb(LIGHT.textMuted));
+      doc.text(k.label.toUpperCase(), x + 3, kpiY + 7);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(18);
+      doc.setTextColor(...hexToRgb(LIGHT.text));
+      doc.text(String(k.value), x + 3, kpiY + 20);
+    });
+
+    // Footer strip on cover
+    doc.setFillColor(...hexToRgb(LIGHT.panel));
+    doc.rect(0, H - 22, W, 22, 'F');
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    doc.setTextColor(...hexToRgb(LIGHT.textMuted));
+    doc.text(brand.footerText, margin, H - 12);
+    doc.setTextColor(...hexToRgb(LIGHT.accent));
+    doc.text(`Built by ${brand.builtBy}`, W - margin, H - 12, { align: 'right' });
+
+    // ---------- TOC placeholder ----------
+    doc.addPage();
+    const tocPage = doc.internal.getCurrentPageInfo().pageNumber;
+    // Will be filled in after section rendering
+
+    // Header/footer function
+    function drawHeaderFooter(pageNum, totalPages) {
+      doc.setPage(pageNum);
+      if (pageNum === 1) return; // cover has no running header
+      // Header
+      doc.setFillColor(...hexToRgb(LIGHT.bg));
+      doc.rect(0, 0, W, 14, 'F');
+      doc.setDrawColor(...hexToRgb(LIGHT.border));
+      doc.setLineWidth(0.2);
+      doc.line(margin, 14, W - margin, 14);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8);
+      doc.setTextColor(...hexToRgb(LIGHT.textMuted));
+      doc.text(brand.customerName + ' · Pipeline Report · ' + (periodLabel || ''), margin, 9);
+      doc.text(`Page ${pageNum} / ${totalPages}`, W - margin, 9, { align: 'right' });
+      // Footer
+      doc.line(margin, H - 12, W - margin, H - 12);
+      doc.text(brand.footerText, margin, H - 7);
+      doc.setTextColor(...hexToRgb(LIGHT.accent));
+      doc.text(`Built by ${brand.builtBy}`, W - margin, H - 7, { align: 'right' });
+    }
+
+    // Helpers: new page with room check
+    let cursorY = 22;
+    function addPageIfNeeded(needed) {
+      if (cursorY + needed > H - 20) {
+        doc.addPage();
+        cursorY = 22;
+      }
+    }
+    function addSectionHeading(title) {
+      addPageIfNeeded(18);
+      toc.push({ title, page: doc.internal.getCurrentPageInfo().pageNumber });
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(16);
+      doc.setTextColor(...hexToRgb(LIGHT.text));
+      doc.text(title, margin, cursorY + 4);
+      // Accent underline
+      doc.setDrawColor(...hexToRgb(LIGHT.accent));
+      doc.setLineWidth(0.8);
+      doc.line(margin, cursorY + 7, margin + 30, cursorY + 7);
+      cursorY += 14;
+    }
+    function addParagraph(text) {
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(10);
+      doc.setTextColor(...hexToRgb(LIGHT.text));
+      const lines = doc.splitTextToSize(text, contentW);
+      const needed = lines.length * 4.5 + 2;
+      addPageIfNeeded(needed);
+      doc.text(lines, margin, cursorY + 3);
+      cursorY += needed;
+    }
+    function addSubheading(text) {
+      addPageIfNeeded(10);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(11);
+      doc.setTextColor(...hexToRgb(LIGHT.text));
+      doc.text(text, margin, cursorY + 4);
+      cursorY += 7;
+    }
+    async function addChart(chartId, caption, height) {
+      const chart = charts[chartId];
+      if (!chart) return;
+      const h = height || 60;
+      addPageIfNeeded(h + 14);
+      try {
+        const imgData = await renderChartOffscreen(chart.config, 900, 380);
+        const imgW = contentW;
+        const imgH = (380 / 900) * imgW;
+        doc.addImage(imgData, 'JPEG', margin, cursorY, imgW, imgH);
+        cursorY += imgH + 3;
+        if (caption) {
+          doc.setFont('helvetica', 'italic');
+          doc.setFontSize(8);
+          doc.setTextColor(...hexToRgb(LIGHT.textMuted));
+          const lines = doc.splitTextToSize(caption, contentW);
+          doc.text(lines, margin, cursorY + 3);
+          cursorY += lines.length * 3.5 + 4;
+        }
+      } catch (e) { console.warn('chart render failed', chartId, e); }
+    }
+
+    // ---------- EXECUTIVE SUMMARY ----------
+    doc.addPage(); cursorY = 22;
+    addSectionHeading('Executive Summary');
+    const paras = generateNarrative(agg);
+    paras.forEach(p => { addParagraph(p); cursorY += 2; });
+
+    progress.style.width = '20%';
+    status.textContent = 'Rendering overview charts…';
+
+    // ---------- OVERVIEW ----------
+    doc.addPage(); cursorY = 22;
+    addSectionHeading('Pipeline Overview');
+    // KPI row
+    const kpiData = [
+      ['Dossiers received', String(agg.totals.dossiers_period)],
+      ['LOIs sent', String(agg.totals.lois_period)],
+      ['Active deals', String(agg.totals.active_period)],
+      ['Coverage ratio', agg.coverageRatio + 'x'],
+    ];
+    doc.autoTable({
+      startY: cursorY,
+      head: [['Metric', 'Value']],
+      body: kpiData,
+      margin: { left: margin, right: margin },
+      theme: 'plain',
+      styles: { fontSize: 10, textColor: hexToRgb(LIGHT.text) },
+      headStyles: { fillColor: hexToRgb(LIGHT.accent), textColor: [255, 255, 255], fontStyle: 'bold' },
+      alternateRowStyles: { fillColor: hexToRgb(LIGHT.panel) }
+    });
+    cursorY = doc.lastAutoTable.finalY + 8;
+
+    await addChart('cumDossiers', 'Cumulative dossiers received over the period.');
+    await addChart('cumLois', 'Cumulative LOIs sent over the period.');
+    await addChart('monthly', 'Monthly new dossiers, split build-up vs new platform.');
+    await addChart('funnel', 'Entries that reached each stage, split build-up vs new platform.');
+    await addChart('sector', 'Sector distribution of the pipeline.');
+
+    progress.style.width = '45%';
+    status.textContent = 'Rendering insights…';
+
+    // ---------- INSIGHTS ----------
+    doc.addPage(); cursorY = 22;
+    addSectionHeading('Insights & Forecast');
+
+    addSubheading('Pipeline Health Score: ' + agg.healthScore + '/100');
+    const healthRows = agg.healthBreakdown.map(h => [h.label, h.value + '/25']);
+    doc.autoTable({
+      startY: cursorY, head: [['Component', 'Score']], body: healthRows,
+      margin: { left: margin, right: margin }, theme: 'plain',
+      styles: { fontSize: 9 }, headStyles: { fillColor: hexToRgb(LIGHT.accent), textColor: [255,255,255] },
+    });
+    cursorY = doc.lastAutoTable.finalY + 8;
+
+    addSubheading('Stage conversion vs benchmark');
+    const benchRows = agg.benchmarkRows.map(b => {
+      const bmTxt = b.bm ? `${b.bm.healthy[0]}-${b.bm.healthy[1]}%` : '—';
+      return [`${b.from} → ${b.to}`, `${b.conv}%`, bmTxt, b.label];
+    });
+    doc.autoTable({
+      startY: cursorY, head: [['Transition', 'Your rate', 'Healthy', 'Status']], body: benchRows,
+      margin: { left: margin, right: margin }, theme: 'plain',
+      styles: { fontSize: 9 }, headStyles: { fillColor: hexToRgb(LIGHT.accent), textColor: [255,255,255] },
+      alternateRowStyles: { fillColor: hexToRgb(LIGHT.panel) }
+    });
+    cursorY = doc.lastAutoTable.finalY + 8;
+
+    await addChart('cohort', 'Cohort survival curves: each line is a dossier vintage, Y-axis = % still alive at month N.');
+    await addChart('sourceScatter', 'Introducer firms plotted by volume (x) vs % past Pre-Screening (y).');
+    await addChart('aging', 'Age buckets of active pipeline. Zombies >90 days consume mental bandwidth.');
+
+    progress.style.width = '65%';
+    status.textContent = 'Rendering team and sources…';
+
+    // ---------- TEAM ----------
+    doc.addPage(); cursorY = 22;
+    addSectionHeading('Team Performance');
+    const teamRows = agg.originators.map(o => [
+      o.name, String(o.total), String(o.active), String(o.loi_plus), String(o.won), String(o.killed),
+      o.win_rate + '%', o.avg_days_loi != null ? String(o.avg_days_loi) : '—',
+      '€' + (o.ticketSum / 1000000).toFixed(1) + 'M'
+    ]);
+    doc.autoTable({
+      startY: cursorY,
+      head: [['Originator', 'Sourced', 'Active', 'LOI+', 'Won', 'Killed', 'Win%', 'd→LOI', 'Pipeline']],
+      body: teamRows,
+      margin: { left: margin, right: margin }, theme: 'plain',
+      styles: { fontSize: 8 },
+      headStyles: { fillColor: hexToRgb(LIGHT.accent), textColor: [255,255,255], fontSize: 8 },
+      alternateRowStyles: { fillColor: hexToRgb(LIGHT.panel) }
+    });
+    cursorY = doc.lastAutoTable.finalY + 8;
+    await addChart('workload', 'Active deals per originator.');
+
+    // ---------- SOURCES ----------
+    doc.addPage(); cursorY = 22;
+    addSectionHeading('Sources & Referrals');
+    const introRows = agg.introQuality.slice(0, 20).map((f, i) => [
+      String(i+1), f.firm, String(f.deals), String(f.past_pre), f.quality + '%', String(f.loi_plus), String(f.won)
+    ]);
+    doc.autoTable({
+      startY: cursorY,
+      head: [['#', 'Firm', 'Deals', 'Past pre-screen', 'Quality', 'LOI+', 'Won']],
+      body: introRows,
+      margin: { left: margin, right: margin }, theme: 'plain',
+      styles: { fontSize: 8.5 },
+      headStyles: { fillColor: hexToRgb(LIGHT.accent), textColor: [255,255,255] },
+      alternateRowStyles: { fillColor: hexToRgb(LIGHT.panel) }
+    });
+
+    progress.style.width = '80%';
+    status.textContent = 'Rendering sectors and loss analysis…';
+
+    // ---------- SECTORS ----------
+    doc.addPage(); cursorY = 22;
+    addSectionHeading('Sectors & Poles');
+    await addChart('poleLoad', 'Pole loading: active deals per pole broken down by current stage.');
+    await addChart('sectorTrend', 'Sector intake trend over time.');
+
+    // ---------- LOSS ----------
+    doc.addPage(); cursorY = 22;
+    addSectionHeading('Loss Analysis');
+    addParagraph(`Of the deals in period, ${agg.killedInPeriod.length} were killed (kill rate ${agg.killRate}%). Most common loss reason: "${agg.topReason}".`);
+    await addChart('lastStageBeforeKill', 'Stage at which deals were killed.');
+    if (charts.passReasons) await addChart('passReasons', 'Pass reasons aggregated across the period.');
+
+    // ---------- ALL DEALS APPENDIX ----------
+    doc.addPage(); cursorY = 22;
+    addSectionHeading('Appendix: Deal Ledger');
+    const dealRows = agg.periodRows.slice(0, 60).map(r => [
+      (r.company || '—').slice(0, 28),
+      (r.stage || '—').slice(0, 18),
+      (r.pole || '—').slice(0, 14),
+      (r.sector || '—').slice(0, 14),
+      ((r.originators || [])[0] || '—').slice(0, 16),
+      (r.dossier_date || '').slice(0, 10),
+      r.ticket ? '€' + (r.ticket/1000000).toFixed(1) + 'M' : '—'
+    ]);
+    doc.autoTable({
+      startY: cursorY,
+      head: [['Company', 'Stage', 'Pole', 'Sector', 'Originator', 'Added', 'Ticket']],
+      body: dealRows,
+      margin: { left: margin, right: margin }, theme: 'plain',
+      styles: { fontSize: 7.5, cellPadding: 1.5 },
+      headStyles: { fillColor: hexToRgb(LIGHT.accent), textColor: [255,255,255], fontSize: 7.5 },
+      alternateRowStyles: { fillColor: hexToRgb(LIGHT.panel) }
+    });
+
+    progress.style.width = '92%';
+    status.textContent = 'Building table of contents…';
+
+    // ---------- Fill in TOC ----------
+    doc.setPage(tocPage);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(20);
+    doc.setTextColor(...hexToRgb(LIGHT.text));
+    doc.text('Contents', margin, 30);
+    doc.setDrawColor(...hexToRgb(LIGHT.accent));
+    doc.setLineWidth(0.8);
+    doc.line(margin, 33, margin + 30, 33);
+    let tocY = 50;
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(12);
+    toc.forEach((entry, i) => {
+      doc.setTextColor(...hexToRgb(LIGHT.text));
+      doc.text(`${i+1}.`, margin, tocY);
+      doc.text(entry.title, margin + 10, tocY);
+      doc.setTextColor(...hexToRgb(LIGHT.textMuted));
+      doc.text(String(entry.page), W - margin, tocY, { align: 'right' });
+      // Dotted leader
+      const titleWidth = doc.getTextWidth(entry.title);
+      const pageNumWidth = doc.getTextWidth(String(entry.page));
+      const leaderStart = margin + 10 + titleWidth + 3;
+      const leaderEnd = W - margin - pageNumWidth - 3;
+      if (leaderEnd > leaderStart) {
+        doc.setLineWidth(0.1);
+        doc.setDrawColor(...hexToRgb(LIGHT.textSoft));
+        const dotCount = Math.floor((leaderEnd - leaderStart) / 2);
+        for (let d = 0; d < dotCount; d++) {
+          const x = leaderStart + d * 2;
+          doc.circle(x, tocY - 1, 0.15, 'F');
+        }
+      }
+      tocY += 10;
+    });
+
+    // ---------- Headers/footers pass ----------
+    const totalPages = doc.internal.getNumberOfPages();
+    for (let p = 1; p <= totalPages; p++) drawHeaderFooter(p, totalPages);
+
+    progress.style.width = '100%';
+    status.textContent = 'Saving…';
+    doc.save(`${brand.customerName.toLowerCase().replace(/\s+/g,'-')}-pipeline-report-${fmtDate(new Date())}.pdf`);
+
+    setTimeout(() => modal.classList.remove('open'), 400);
+  } catch (e) {
+    console.error('PDF generation error', e);
+    status.textContent = 'Error: ' + e.message;
+    setTimeout(() => modal.classList.remove('open'), 2500);
+  }
+}
+
+document.getElementById('pdfBtn').addEventListener('click', buildPDF);
+
+
+// ========== Initial render bootstrap ==========
+applyFilters();
+render(aggregate(state.filtered));
+</script>
+</body>
+</html>
